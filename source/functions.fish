@@ -74,21 +74,19 @@ end
 # Diffs two files and outputs with bat
 function pretty_diff 
 	diff -u "$argv[1]" "$argv[2]" --minimal | \
-	tee -a "$(_resolve_log)" | \
+	tee -a "$(_log)" | \
 	bat --language diff --paging never --file-name "$argv[1] -> $argv[2]" -
 	return
 end
 
-######################################################	
-### Make commands run verbose if enabled in config ###
-
-function _verbose
+function zai_verbose
+	set -f _return_code "$status"
 	if string match -rqi '^true$' $ZAI_VERBOSE
-		echo -- '--verbose'
-		return
+		printf '%s' "$argv[1]" | tee -a "$(_log)"
 	else
-		return
+		printf '%s' "$argv[1]" >> "$(_log)"
 	end
+	return $_return_code
 end
 
 ######################################################	

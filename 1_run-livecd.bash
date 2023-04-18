@@ -28,15 +28,14 @@ reset_dirs
 
 if [[ ! $ZAI_DIR == '/zai' ]]; then
 	clear
-	echo -n "Starting " | tee -a "$(_log)"
-	_txtbold
-	_txtgrn
-	echo "Zaiju's Arch Installer" | tee -a "$(_log)"
-	_txtclean
-	echo -e "Version: ${__version__}\n" | tee -a "$(_log)"
+
+	_txtclean; 			echo -n "Starting " | tee -a "$(_log)"
+	_txtbold; _txtgrn; 	echo "Zaiju's Arch Installer" | tee -a "$(_log)"
+	_txtclean; 			echo -e "Version: ${__version__}\n" | tee -a "$(_log)"
+
 	txt_major "Copying scripts to '/zai'..."
-	rm -r -f -v /zai >> "$(_log_)"
-	if cp -ar "${ZAI_DIR}" '/zai'; then
+	zai_verbose "$( rm -rfv /zai 2>> "$(_err)" )"
+	if zai_verbose "$( cp -avr "${ZAI_DIR}" '/zai' 2>> "$(_err)" )"; then
 		export ZAI_DIR='/zai'
 		txt_major "Passing execution into '/zai'..."
 		# shellcheck disable=SC2093
@@ -55,30 +54,34 @@ reset_dirs
 
 # VM testing
 if [[ ${ZAI_VMDEGUB,,} =~ ^true$ ]]; then
-	txt_major "Creating symlinks for testing..."
+	txt_major "Creating symlinks for testing inside a VM..."
 	# shellcheck disable=SC2129
-	ln -vs /dev/vda  "/dev/${ZAI_BLK}"					>> "$(_log)" 2>> "$(_err)"
-	ln -vs /dev/vda1 "/dev/${ZAI_BLK}${ZAI_BLK_PP}1"	>> "$(_log)" 2>> "$(_err)"
-	ln -vs /dev/vda2 "/dev/${ZAI_BLK}${ZAI_BLK_PP}2"	>> "$(_log)" 2>> "$(_err)"
-	ln -vs /dev/vda3 "/dev/${ZAI_BLK}${ZAI_BLK_PP}3"	>> "$(_log)" 2>> "$(_err)"
-	ln -vs /dev/vda4 "/dev/${ZAI_BLK}${ZAI_BLK_PP}4"	>> "$(_log)" 2>> "$(_err)"
+	zai_verbose "$( ln -vs /dev/vda  "/dev/${ZAI_BLK}" 					2>> "$(_err)" )"
+	zai_verbose "$( ln -vs /dev/vda1 "/dev/${ZAI_BLK}${ZAI_BLK_PP}1"	2>> "$(_err)" )"
+	zai_verbose "$( ln -vs /dev/vda2 "/dev/${ZAI_BLK}${ZAI_BLK_PP}2"	2>> "$(_err)" )"
+	zai_verbose "$( ln -vs /dev/vda3 "/dev/${ZAI_BLK}${ZAI_BLK_PP}3"	2>> "$(_err)" )"
+	zai_verbose "$( ln -vs /dev/vda4 "/dev/${ZAI_BLK}${ZAI_BLK_PP}4"	2>> "$(_err)" )"
+	txt_base "Finished creating symlinks"
 fi
 
 # Creating backup directory
-mkdir -v -p /mnt/zai/backups >> "$(_log)" 2>> "$(_err)"
+zai_verbose "$( mkdir -vp "/mnt/$_backup_dir" 2>> "$(_err)" )"
 
 # Get pacman to automatically retrieve gpg keys
 ver_minor "Setting 'pacman' to auto rereieve gpg keys..."
 echo 'auto-key-retrieve' >> /etc/pacman.d/gnupg/gpg.conf 
 
+# Installing really useful packages that save us a lot of pain
 txt_major "Installing 'bat', 'rsync', and 'fish' for easier scripting..."
-pacman -Sy --noconfirm --needed --color always bat fish rsync | tee -a "$(_log)" 2>> "$(_err)"
+zai_verbose "$( pacman -Sy --noconfirm --needed --color always bat fish rsync 2>> "$(_err)" )"
 
 # Sometimes file permissions get messed up during the copy process, this attempts to fix them
 txt_major "Making sure file permissions are correct..."
-find "$ZAI_DIR" -mindepth 1 -type f | \
+zai_verbose "$( \
+	find "$ZAI_DIR" -mindepth 1 -type f | \
 	grep -iE '(\.bash)|(\.fish)|(\.sh)' | \
-	xargs chmod +x -c | tee -a "$(_log)" 2>> "$(_err)"
+	xargs chmod +x -c 2>> "$(_err)" 	  \
+)"
 
 # Just prints time and date information so the user is aware
 # of any issues now rather then later
@@ -126,7 +129,7 @@ bat --paging never --language fstab /mnt/etc/fstab 2>> "$(_err)"
 # handle automatic creation of the '/tmp' tmpfs after rebooting
 txt_major "Mounting a 'tmpfs' on '/mnt/tmp'..."
 
-if mount -v --mkdir -t tmpfs -o 'size=100%' tmpfs /mnt/tmp >> "$(_log)" 2>> "$(_err)"; then
+if zai_verbose "$( mount -v --mkdir -t tmpfs -o 'size=100%' tmpfs /mnt/tmp 2>> "$(_err)" )"; then
 	txt_base "Successfully mounted a tmpfs on '/mnt/tmp'"
 	echo '' | tee -a "$(_log)"
 	# Increases the spacing between columns for nicer reading
@@ -160,7 +163,7 @@ fish "$ZAI_DIR/sudoers/sudoers.fish"
 # Now we mount the local repo, if enabled, into the new root partition
 if [[ ${ZAI_PKG_LOCALREPO,,} =~ ^true$ ]]; then
 	txt_major "Mounting local repo into chroot..."
-	if mount -v --mkdir --bind /repo /mnt/repo >> "$(_log)" 2>> "$(_err)"; then
+	if zai_verbose "$( mount -v --mkdir --bind /repo /mnt/repo 2>> "$(_err)" )"; then
 		txt_minor "Successfully mounted local repo in chroot"
 	else
 		err_major "Failed to mount local repo into chroot"
@@ -168,14 +171,23 @@ if [[ ${ZAI_PKG_LOCALREPO,,} =~ ^true$ ]]; then
 	fi
 fi
 
-# Now we move all the scripts and logs into the new root and redirect future logs into there
+# Now we recursively move $ZAI_DIR into the new root
 txt_major "Copying '$ZAI_DIR' into chroot..."
-if rsync -rah --no-motd --inplace --verbose "$ZAI_DIR/" '/mnt/zai' >> "$(_log)" 2>> "$(_err)"; then
+# If logs are being stored below $ZAI_DIR as is the default then we need to temporarily redirect them elsewhere
+# before we update the location of the logs and start writing to them like normal
+if rsync -rah --no-motd --stats --inplace --verbose "$ZAI_DIR/" '/mnt/zai' >> /tmp/rsync.log 2>> /tmp/rsync.err ; then
 	
 	# This just stops scripts from saving logs to a 
 	# directory we would not be preserving
 	old_zai="$ZAI_DIR"
 	export ZAI_DIR='/mnt/zai' 
+
+	# Need to update '_backup_dir' and '_log_dir' if we moved $ZAI_DIR
+	reset_dirs
+
+	# Appending our temporarily relocated logs back onto their correct file
+	cat /tmp/rsync.err >> "$(_err)" 2>> /dev/null 
+	zai_verbose "$( cat /tmp/rsync.log 2>> /dev/null )"
 
 	txt_major "Copied '$old_zai' to '/mnt/zai' successfully"
 else
@@ -185,6 +197,9 @@ fi
 
 # Keep our 'pacman.conf' changes so we don't need to do them again
 txt_minor "Moving modified livecd 'pacman.conf' into chroot..."
+zai_verbose "$( mkdir -vp "$_backup_dir/etc" 									2>> "$(_err)" )"
+zai_verbose "$( mv -vf '/mnt/etc/pacman.conf' "$_backup_dir/etc/pacman.conf"  	2>> "$(_err)" )"
+zai_verbose "$( cp -vf '/etc/pacman.conf' 	  '/mnt/etc/pacman.conf' 			2>> "$(_err)" )"
 pretty_diff "$_backup_dir/etc/pacman.conf"    "/mnt/etc/pacman.conf"
 
 # Save settings for chroot

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-
+# shellcheck disable=SC2154
+#
 # Load colour and format variables
 # shellcheck source=./format.bash
 source "${ZAI_DIR}/source/format.bash"
@@ -85,22 +86,20 @@ function replace_line {
 	
 	# Actually run 'sed'
 	sed -i "s|${_search}|${_replace}|g" "$_file" 
-	readonly _sed_exit="$?"
-
+	
 	# Return 'sed' status
-	return $_sed_exit
+	return "$?"
 }
 
-######################################################	
-### Make commands run verbose if enabled in config ###
-
-function _verbose {
+# Wraps command output and hides it if not verbose
+function zai_verbose {
+	_return_code="$?"
 	if [[ ${ZAI_VERBOSE,,} =~ ^true$ ]]; then
-		echo '--verbose'
-		return
+		printf '%s' "$1" | tee -a "$(_log)"
 	else
-		return
+		printf '%s' "$1" >> "$(_log)"
 	fi
+	return $_return_code
 }
 
 ######################################################	

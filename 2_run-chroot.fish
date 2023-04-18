@@ -29,8 +29,8 @@ reset_dirs
 txt_major "Continuing installation in chroot..."
 txt_minor "Setting timezone..."
 if test -e "/usr/share/zoneinfo/$ZAI_TIME"
-	ln -sf -v /usr/share/zoneinfo/$ZAI_TIME /etc/localtime 		>> "$(_log)"
-	hwclock --systohc 											| tee -a "$(_log)"	
+	zai_verbose "$( ln -sfv "/usr/share/zoneinfo/$ZAI_TIME" '/etc/localtime' 2>> "$(_err)" )"
+	hwclock --systohc | tee -a "$(_log)"
 else
 	err_minor "Can't resolve '$ZAI_TIME' to a file"
 	err_base "It is resolved like this:"
@@ -44,16 +44,17 @@ bash "$ZAI_DIR/config/locale.bash"
 
 txt_minor "Setting hostname to '$ZAI_NAME'..."
 echo "$ZAI_NAME" > /etc/hostname
+echo "echo \"$ZAI_NAME\" > /etc/hostname" >> "$(_log)"
 
 if string match -rqi '^true$' $ZAI_PKG_OPTIMISE
 	# Optimise 'makepkg.conf' settings
-	fish  "$ZAI_DIR/pacman/makepkg.fish"
+	fish "$ZAI_DIR/pacman/makepkg.fish"
 end
 
 if string match -rqi '^true$' $ZAI_PKG_AUTOKEY
 	# Get pacman to automatically retrieve gpg keys
 	ver_minor "Configuring pacman to automatically retrieve gpg keys..."
-	cp -v /etc/pacman.d/gnupg/gpg.conf "$ZAI_DIR/backups/etc/pacman.d/gnupg/gpg.conf" >> "$(_log)"
+	zai_verbose "$( cp -vf '/etc/pacman.d/gnupg/gpg.conf' "$_backup_dir/etc/pacman.d/gnupg/gpg.conf" 2>> "$(_err)" )"
 	echo 'auto-key-retrieve' >> /etc/pacman.d/gnupg/gpg.conf
 	pretty_diff "$_backup_dir/etc/pacman.d/gnupg/gpg.conf" '/etc/pacman.d/gnupg/gpg.conf'
 end
@@ -63,7 +64,8 @@ end
 txt_major "Beginning large-scale package install..."
 
 txt_minor "Refreshing and updating repo database..."
-pacman -Syu --noconfirm --color always 2>> "$(_err)" | tee -a "$(_log)" 
+zai_verbose "$( pacman -Syu --noconfirm --color always 2>> "$(_err)" )"
+txt_base "Finished updating repo database"
 
 # Create AUR user
 fish "$ZAI_DIR/pacman/aur_user.fish"
@@ -97,7 +99,7 @@ txt_minor "Updating 'pacman.conf' for normal usage..."
 fish "$ZAI_DIR/pacman/post-install.fish"
 
 txt_minor "Installing other '/etc' files..."
-cp (_v) -r $ZAI_DIR/etc/* /etc/	| tee -a "$(_log)"
+zai_verbose "$( cp -vrf $ZAI_DIR/etc/* /etc/ 2>> "$(_err)" )"
 
 txt_minor "Fixing a systemd initramfs issue..."
 touch /etc/vconsole.conf
@@ -110,15 +112,15 @@ end
 txt_major "Updating mirrorlist..."
 # This processes each line of 'reflector.conf' and removes comments
 # and blank lines, then feeds those as arguments to reflector
-if grep -vxE '(^_*#.*)|(^_*)' /etc/xdg/reflector/reflector.conf | xargs reflector >> "$(_log)"
+if grep -vxE '(^_*#.*)|(^_*)' /etc/xdg/reflector/reflector.conf | xargs reflector >> "$(_log)" 2>> "$(_err)" 
 	ver_base "Successfully updated mirrorlist"
 else
 	err_minor "Failed to update mirrorlist"
 end
 
 txt_major "Rebuilding package database with new 'pacman.conf'..."
-yes | pacman -Scc  --noconfirm --color always			| tee -a "$(_log)"
-yes | pacman -Syyu --noconfirm --color always --needed 	| tee -a "$(_log)"
+zai_verbose "$( yes | pacman -Scc  --noconfirm --color always			2>> "$(_err)" )"
+zai_verbose "$( yes | pacman -Syyu --noconfirm --color always --needed 	2>> "$(_err)" )"
 
 if string match -rqi '^true$' $ZAI_PKG_CLEAN
 	# Clean up any orphans agressively
@@ -126,7 +128,7 @@ if string match -rqi '^true$' $ZAI_PKG_CLEAN
 end
 
 txt_major "Rebuilding initramfs..."
-mkinitcpio -P | tee -a "$(_log)"
+zai_verbose "$( mkinitcpio -P 2>> "$(_err)" )"
 
 echo -e "\nSet 'root' password:"
 passwd root
@@ -137,7 +139,7 @@ txt_major "Configuring systemd services..."
 
 for service in $ZAI_SYS_ENABLE
 	if test -n "$service"
-		if systemctl --quiet enable $service
+		if zai_verbose "$( systemctl enable $service 2>> "$(_err)" )"
 			ver_base "Successfully enabled '$service'"
 		else
 			err_minor "Failed to enable '$service'"
@@ -147,7 +149,7 @@ end
 
 for service in $ZAI_SYS_DISABLE
 	if test -n "$service"
-		if systemctl --quiet disable $service
+		if zai_verbose "$( systemctl disable $service 2>> "$(_err)" )"
 			ver_base "Successfully disabled '$service'"
 		else
 			err_minor "Failed to disable '$service'"
@@ -157,7 +159,7 @@ end
 
 for service in $ZAI_SYS_MASK
 	if test -n "$service"
-		if systemctl --quiet mask $service
+		if zai_verbose "$( systemctl mask $service 2>> "$(_err)" )"
 			ver_base "Successfully masked '$service'"
 		else
 			err_minor "Failed to mask '$service'"
@@ -172,12 +174,12 @@ txt_minor "Finished configuring services\n"
 txt_major "Copying post-install scripts to '/root'..."
 for i in (find "$ZAI_DIR/post-install" -mindepth 1 -maxdepth 1)
 	if echo "$(path basename $i)" | grep -qvE '^\.'
-		cp (_v) -rf $i /root/ | tee -a "$(_log)"
+		zai_verbose "$( cp -vrf $i /root/ 2>> "$(_err)" )"
 	end
 end
 
-txt_major "Installation finished!" 	| tee -a "$(_log)"
-echo ''								| tee -a "$(_log)"
+txt_major "Installation finished!" 
+echo '' | tee -a "$(_log)"
 
 cat /etc/fstab >> "$(_log)"
 bat --paging never --language fstab /etc/fstab
