@@ -1,4 +1,4 @@
-ly
-linux-firmware 
-limine
-reflector
+ly              # The only session manager we currently support
+linux-firmware  # Dosen't every install need this?
+limine          # This is the only bootloader we currently support
+reflector       # We use this a lot so it is probably best to install it by default
