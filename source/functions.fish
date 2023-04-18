@@ -104,6 +104,17 @@ end
 ######################################################	
 ####### Text formatting and printing functions #######
 
+function _log
+	echo "$ZAI_DIR/logs/$_name.log"
+	return	
+end
+
+
+function _err
+	echo "$ZAI_DIR/logs/$_name.err'"
+	return	
+end
+
 # Creates '==> $1' with colour and formatting
 function txt_major 
 	_txtclean				# Reset text formatting
