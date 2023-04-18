@@ -11,7 +11,7 @@ source "$ZAI_DIR/source/functions.fish"
 set _conf '/etc/makepkg.conf'
 
 ver_minor "Backing up $_conf..."
-cp (_v) -f "$_conf" "$ZAI_DIR/backups/makepkg.conf"
+cp -vf "$_conf" "$ZAI_DIR/backups/makepkg.conf"
 
 txt_major "Optimising 'makepkg.conf' settings..."
 
