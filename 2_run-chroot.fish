@@ -1,11 +1,13 @@
 #!/usr/bin/env fish
 
+# If '$ZAI_DIR' is explicitly set we use that otherwise 
+# we use the default location of '/zai'
 if test -z "$ZAI_DIR"
-	# If ZAI_DIR is empty we 
-	# set it to '/zai'
+	# If ZAI_DIR is empty we set it to '/zai'
 	set -x ZAI_DIR '/zai'
 else
 	# Otherwise just export it's value
+	# Unsure if this is strictly needed
 	set -x ZAI_DIR
 end
 
