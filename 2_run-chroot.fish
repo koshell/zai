@@ -70,6 +70,11 @@ txt_base "Finished updating repo database"
 # Create AUR user
 fish "$ZAI_DIR/pacman/aur_user.fish"
 
+# Build 'paru' if enabled
+if string match -rqi '^true$' $ZAI_AUR_PARU
+	fish "$ZAI_DIR/pacman/build_paru.fish"
+end
+
 # Install kernel
 fish "$ZAI_DIR/pacman/install_kernel.fish"
 
