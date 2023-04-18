@@ -3,7 +3,7 @@
 # For logging
 set _name ( path change-extension '' ( basename ( status filename )))
 
-set -x ZAI_DIR ( path dirname ( path dirname ( status filename )))
+set -x ZAI_DIR ( path dirname ( status filename ))
 
 # Load helper functions
 source "$ZAI_DIR/source/functions.fish"

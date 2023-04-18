@@ -3,7 +3,7 @@
 # For logging
 set _name ( path change-extension '' ( basename ( status filename )))
 
-set -x ZAI_DIR ( path dirname ( path dirname ( status filename )))
+set -x ZAI_DIR ( path dirname ( status filename ))
 
 # Since this is likely being ran outside of the normal 
 # environment we need to reload the config values
@@ -23,19 +23,19 @@ echo '' | tee -a "$(_log)"
 # These are all magic functions stolen from the arch wiki, 
 # I have no idea how half them work and can't really debug them if they break
 set pkglist ( pacman -Qqetn )
-ver_major "Saved $(printf '%s\n' $pkglist | grep -xv '[[:blank:]]*' | tee $ZAI_DIR/pkglist/pkglist.list | tee -a $(_log) | wc -l) official packages to '$ZAI_DIR/pkglist/pkglist.list'"
+txt_minor "Saved $(printf '%s\n' $pkglist | grep -xv '[[:blank:]]*' | tee $ZAI_DIR/pkglist/pkglist.list | tee -a $(_log) | wc -l) official packages to '$ZAI_DIR/pkglist/pkglist.list'"
 
 set pkg_optlist ( bash -c 'comm -13 <(pacman -Qqndt | sort) <(pacman -Qqndtt | sort)' )
-ver_minor "Saved $(printf '%s\n' $pkg_optlist | grep -xv '[[:blank:]]*' | tee $ZAI_DIR/pkglist/pkgopts.list | tee -a $(_log) | wc -l) official optional dependencies to '$ZAI_DIR/pkglist/pkgopts.list'"
+txt_base "Saved $(printf '%s\n' $pkg_optlist | grep -xv '[[:blank:]]*' | tee $ZAI_DIR/pkglist/pkgopts.list | tee -a $(_log) | wc -l) official optional dependencies to '$ZAI_DIR/pkglist/pkgopts.list'"
 
 # This just makes the printing nicer
 echo '' | tee -a "$(_log)"
 
 set aurlist ( pacman -Qqetm )
-ver_major "Saved $(printf '%s\n' $aurlist | grep -xv '[[:blank:]]*' | tee $ZAI_DIR/pkglist/aurlist.list | tee -a $(_log) | wc -l) AUR packages to '$ZAI_DIR/pkglist/aurlist.list'"
+txt_minor "Saved $(printf '%s\n' $aurlist | grep -xv '[[:blank:]]*' | tee $ZAI_DIR/pkglist/aurlist.list | tee -a $(_log) | wc -l) AUR packages to '$ZAI_DIR/pkglist/aurlist.list'"
 
 set aur_optlist ( bash -c 'comm -13 <(pacman -Qqmdt | sort) <(pacman -Qqmdtt | sort)' )
-ver_minor "Saved $(printf '%s\n' $aur_optlist | grep -xv '[[:blank:]]*' | tee $ZAI_DIR/pkglist/auropts.list | tee -a $(_log) | wc -l) AUR optional dependencies to '$ZAI_DIR/pkglist/auropts.list'"
+txt_base "Saved $(printf '%s\n' $aur_optlist | grep -xv '[[:blank:]]*' | tee $ZAI_DIR/pkglist/auropts.list | tee -a $(_log) | wc -l) AUR optional dependencies to '$ZAI_DIR/pkglist/auropts.list'"
 
 echo '' | tee -a "$(_log)"
 txt_major "Done!"
