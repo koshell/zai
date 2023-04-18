@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# This file will be sourced by 'run-livecd.bash'
+# This file will be sourced by '1_run-livecd.bash'
 #
 # It is used to set up the required variables and settings 
 # for the rest of the scripts to function.
