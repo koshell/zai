@@ -4,14 +4,22 @@
 # shellcheck source=./format.bash
 source "${ZAI_DIR}/source/format.bash"
 
-# Overwrites any bash variables with 
-# fish universal variables if they exist
+# Diffs two files and outputs with bat
+function pretty_diff {
+	diff -u "$1" "$2" --minimal | \
+	tee -a "$(_resolve_log)" | \
+	bat --language diff --paging never --file-name "$1 -> $2" -
+	return
+}
+
+# Overwrites any bash variables with fish universal variables if they exist
 function update_exports {
 	txt_major "Updating exported variables..."
-	printenv | grep -e '^ZAI_' | sort > /tmp/zai_var.old
-	eval "$ZAI_DIR/source/universals.fish"
-	printenv | grep -e '^ZAI_' | sort > /tmp/zai_var.new
-	diff -u /tmp/zai_var.old /tmp/zai_var.new --color --minimal 
+	printenv | grep -E '^ZAI\_' | sort > /tmp/zai_var.old
+	eval "$(fish "$ZAI_DIR/source/universals.fish")"
+	printenv | grep -E '^ZAI\_' | sort > /tmp/zai_var.new
+	diff -u "/tmp/zai_var.old" "/tmp/zai_var.new" --minimal	>> "$(_log)"
+	pretty_diff "/tmp/zai_var.old" "/tmp/zai_var.new" 
 	txt_major "Finished updating exported variables"
 	return
 }
