@@ -109,11 +109,21 @@ bat --paging never --language fstab /mnt/etc/fstab
 # add it to the generated 'fstab' file, instead we will let systemd
 # handle automatic creation of the '/tmp' tmpfs after rebooting
 txt_major "Mounting a 'tmpfs' on '/mnt/tmp'..."
-if mount $(_v) --mkdir -t tmpfs -o 'size=100%' tmpfs /mnt/tmp; then
+
+if mount -v --mkdir -t tmpfs -o 'size=100%' tmpfs /mnt/tmp >> "$(_log)"; then
 	txt_base "Successfully mounted a tmpfs on '/mnt/tmp'"
-	echo ''
-	findmnt --mountpoint /mnt/tmp -o TARGET,FSTYPE,SIZE,OPTIONS | sed -E 's|([a-zA-Z0-9]) |\1     |g'
-	echo ''
+	echo '' | tee -a "$(_log)"
+	# Increases the spacing between columns for nicer reading
+	_added_spaces=4
+	_spaces=''
+	for i in $(seq 1 $(( 1 + _added_spaces ))); do
+  		_spaces+=' '
+	done
+	findmnt --mountpoint /mnt/tmp \
+		-o TARGET,FSTYPE,SIZE,OPTIONS | \
+		sed -E "s|([[:graph:]]) |\1${_spaces}|g" | \
+		tee -a "$(_log)"
+	echo '' | tee -a "$(_log)"
 else
 	err_base "Failed to mount a tmpfs on '/mnt/tmp'"
 	err_base "This isn't ideal but shouldn't cause any issues"
