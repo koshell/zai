@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2155,SC2046
+# shellcheck disable=
 #
 readonly __version__='0.0.1'
 readonly __author__='zaiju-code'
 
 # Script root directory
+# shellcheck disable=SC2155
 export ZAI_DIR="$(dirname -- "$(readlink -f "$0")")"
 
 # For logging
 _name="$(_tmp="$(basename "$0")"; echo "${_tmp%.*}")"
 
 # Load config values
-# shellcheck source=source/config.sh
+# shellcheck source=0_config
 source "$ZAI_DIR/0_config"
 
 # Load colour and format functions
@@ -44,17 +45,14 @@ fi
 # VM testing
 if [[ ${ZAI_VMDEGUB,,} =~ ^true$ ]]; then
 	txt_major "Creating symlinks for testing..."
-	ln -vs /dev/vda  "/dev/${ZAI_BLK}"
-	ln -vs /dev/vda1 "/dev/${ZAI_BLK}${ZAI_BLK_PP}1"
-	ln -vs /dev/vda2 "/dev/${ZAI_BLK}${ZAI_BLK_PP}2"
-	ln -vs /dev/vda3 "/dev/${ZAI_BLK}${ZAI_BLK_PP}3"
-	ln -vs /dev/vda4 "/dev/${ZAI_BLK}${ZAI_BLK_PP}4"
+	# shellcheck disable=SC2129
 fi
 
 # Creating backup directory
 mkdir $(_v) -p /mnt/zai/backups
 
 # Get pacman to automatically retrieve gpg keys
+ver_minor "Setting 'pacman' to auto rereieve gpg keys..."
 echo 'auto-key-retrieve' >> /etc/pacman.d/gnupg/gpg.conf 
 
 txt_major "Installing 'bat', 'rsync', and 'fish' for easier scripting..."
@@ -73,7 +71,7 @@ txt_major "Double check that the time & date is correct:"
 echo ''; timedatectl; echo ''
 pause
 
-# Partition $ZAI_BLOCK
+# Partition '$ZAI_BLOCK'
 fish "$ZAI_DIR/block/partition.fish"
 
 # Encrypt partitions 2, 3, and 4 on $ZAI_BLOCK
@@ -116,6 +114,7 @@ if mount -v --mkdir -t tmpfs -o 'size=100%' tmpfs /mnt/tmp >> "$(_log)"; then
 	# Increases the spacing between columns for nicer reading
 	_added_spaces=4
 	_spaces=''
+	# shellcheck disable=SC2034
 	for i in $(seq 1 $(( 1 + _added_spaces ))); do
   		_spaces+=' '
 	done
