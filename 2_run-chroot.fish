@@ -59,6 +59,12 @@ end
 ########################## Pacman Start ##########################
 txt_major "Beginning large-scale package install..."
 
+txt_minor "Refreshing and updating repo database..."
+pacman -Syu --noconfirm --color always 2>> "$(_err)" | tee -a "$(_log)" 
+
+# Install kernel
+fish "$ZAI_DIR/pacman/install_kernel.fish"
+
 # Install offical packages
 fish "$ZAI_DIR/pacman/install_pkgs.fish"
 

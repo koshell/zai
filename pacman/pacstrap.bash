@@ -10,15 +10,13 @@ source "$ZAI_DIR/source/format.bash"
 # shellcheck source=../source/functions.bash
 source "$ZAI_DIR/source/functions.bash"
 
+# Main difference between the $ZAI_PKG_LOCALREPO
+# version vs otherwise is we bootstrap paru
 txt_major "Installing essential packages..."
 if [[ ${ZAI_PKG_LOCALREPO,,} =~ ^true$ ]]; then
 	pacstrap -K /mnt \
 		base \
 		base-devel \
-		linux-pure-bcachefs-git \
-		linux-pure-bcachefs-git-docs \
-		linux-pure-bcachefs-git-headers \
-		linux-firmware \
 		fish \
 		paru \
 		limine \
@@ -29,8 +27,6 @@ if [[ ${ZAI_PKG_LOCALREPO,,} =~ ^true$ ]]; then
 else
 	pacstrap -K /mnt \
 		base \
-		linux \
-		linux-headers \
 		base-devel \
 		fish \
 		diffutils \

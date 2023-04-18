@@ -67,6 +67,25 @@ export ZAI_VMDEGUB='true'
 export ZAI_LAZYSED='false'
 
 #############################################
+## Kernel Settings ##########################
+
+# The name of the kernel you want to use for installation
+# as it is listed in the package database
+#
+# Eg: export ZAI_KERNEL='linux'
+export ZAI_KERNEL='linux-pure-bcachefs-git'
+
+# Name of the kernels '-docs' package
+# and if it should be installed
+export ZAI_KERNEL_DOCS='linux-pure-bcachefs-git-docs'
+export ZAI_KERNEL_DOCS_INSTALL='false'
+
+# Name of the kernels '-headers' package
+# and if it should be installed
+export ZAI_KERNEL_HEADERS='linux-pure-bcachefs-git-headers'
+export ZAI_KERNEL_HEADERS_INSTALL='true'
+
+#############################################
 ## Systemd Settings #########################
 
 # An array of services to enable once installation is complete
