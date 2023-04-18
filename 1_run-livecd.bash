@@ -32,10 +32,15 @@ if [[ ! $ZAI_DIR == '/zai' ]]; then
 	_txtclean
 	echo -e "Version: ${__version__}\n" | tee -a "$(_log)"
 	txt_major "Copying scripts to '/zai'..."
-	rm -rf /zai > /dev/null
+	rm -r -f -v /zai >> "$(_log_)"
 	if cp -ar "${ZAI_DIR}" '/zai'; then
+		export ZAI_DIR='/zai'
 		txt_major "Passing execution into '/zai'..."
-		exec '/zai/run-livecd.bash' || err_major 'Failed to pass execution, aborting...'; exit 1
+		# shellcheck disable=SC2093
+		exec '/zai/run-livecd.bash'
+		# If exec succeeded we shouldn't ever run the following command
+		err_major "Failed to pass execution into '/zai'"
+		abort
 	else
 		err_major "Copying scripts failed"
 		abort
