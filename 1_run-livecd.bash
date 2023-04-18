@@ -169,7 +169,7 @@ if rsync -rah --no-motd --inplace --verbose "$ZAI_DIR/" '/mnt/zai' >> "$(_log)";
 	# This just stops scripts from saving logs to a 
 	# directory we would not be preserving
 	old_zai="$ZAI_DIR"
-	ZAI_DIR='/mnt/zai' 
+	export ZAI_DIR='/mnt/zai' 
 
 	txt_major "Copied '$old_zai' to '/mnt/zai' successfully"
 else
