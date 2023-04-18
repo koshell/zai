@@ -51,34 +51,34 @@ fi
 if [[ ${ZAI_VMDEGUB,,} =~ ^true$ ]]; then
 	txt_major "Creating symlinks for testing..."
 	# shellcheck disable=SC2129
-	ln -vs /dev/vda  "/dev/${ZAI_BLK}"					>> "$(_log)" 
-	ln -vs /dev/vda1 "/dev/${ZAI_BLK}${ZAI_BLK_PP}1"	>> "$(_log)"
-	ln -vs /dev/vda2 "/dev/${ZAI_BLK}${ZAI_BLK_PP}2"	>> "$(_log)"
-	ln -vs /dev/vda3 "/dev/${ZAI_BLK}${ZAI_BLK_PP}3"	>> "$(_log)"
-	ln -vs /dev/vda4 "/dev/${ZAI_BLK}${ZAI_BLK_PP}4"	>> "$(_log)"
+	ln -vs /dev/vda  "/dev/${ZAI_BLK}"					>> "$(_log)" 2>> "$(_err)"
+	ln -vs /dev/vda1 "/dev/${ZAI_BLK}${ZAI_BLK_PP}1"	>> "$(_log)" 2>> "$(_err)"
+	ln -vs /dev/vda2 "/dev/${ZAI_BLK}${ZAI_BLK_PP}2"	>> "$(_log)" 2>> "$(_err)"
+	ln -vs /dev/vda3 "/dev/${ZAI_BLK}${ZAI_BLK_PP}3"	>> "$(_log)" 2>> "$(_err)"
+	ln -vs /dev/vda4 "/dev/${ZAI_BLK}${ZAI_BLK_PP}4"	>> "$(_log)" 2>> "$(_err)"
 fi
 
 # Creating backup directory
-mkdir -v -p /mnt/zai/backups >> "$(_log)"
+mkdir -v -p /mnt/zai/backups >> "$(_log)" 2>> "$(_err)"
 
 # Get pacman to automatically retrieve gpg keys
 ver_minor "Setting 'pacman' to auto rereieve gpg keys..."
 echo 'auto-key-retrieve' >> /etc/pacman.d/gnupg/gpg.conf 
 
 txt_major "Installing 'bat', 'rsync', and 'fish' for easier scripting..."
-pacman -Sy --noconfirm --needed --color always bat fish rsync | tee -a "$(_log)"
+pacman -Sy --noconfirm --needed --color always bat fish rsync | tee -a "$(_log)" 2>> "$(_err)"
 
 # Sometimes file permissions get messed up during the copy process, this attempts to fix them
 txt_major "Making sure file permissions are correct..."
 find "$ZAI_DIR" -mindepth 1 -type f | \
 	grep -iE '(\.bash)|(\.fish)|(\.sh)' | \
-	xargs chmod +x -c | tee -a "$(_log)" 
+	xargs chmod +x -c | tee -a "$(_log)" 2>> "$(_err)"
 
 # Just prints time and date information so the user is aware
 # of any issues now rather then later
 txt_major "Double check that the time & date is correct:"
 echo ''		| tee -a "$(_log)"
-timedatectl | tee -a "$(_log)"
+timedatectl | tee -a "$(_log)" 2>> "$(_err)"
 echo '' 	| tee -a "$(_log)"
 pause
 
@@ -108,9 +108,9 @@ bash "$ZAI_DIR/pacman/pacstrap.bash"
 # This can sometimes mess up but it is a good example
 # The user is expected to double check it before rebooting
 txt_major "Copying basic 'fstab' config into new root partition..."
-genfstab -U /mnt >> /mnt/etc/fstab
-cat /mnt/etc/fstab >> "$(_log)"
-bat --paging never --language fstab /mnt/etc/fstab
+genfstab -U /mnt >> /mnt/etc/fstab 2>> "$(_err)"
+cat /mnt/etc/fstab >> "$(_log)" 2>> "$(_err)"
+bat --paging never --language fstab /mnt/etc/fstab 2>> "$(_err)"
 
 # Having a functioning tmpfs inside the new root will make compilation
 # faster if we are doing that and otherwise has no real drawbacks
@@ -120,7 +120,7 @@ bat --paging never --language fstab /mnt/etc/fstab
 # handle automatic creation of the '/tmp' tmpfs after rebooting
 txt_major "Mounting a 'tmpfs' on '/mnt/tmp'..."
 
-if mount -v --mkdir -t tmpfs -o 'size=100%' tmpfs /mnt/tmp >> "$(_log)"; then
+if mount -v --mkdir -t tmpfs -o 'size=100%' tmpfs /mnt/tmp >> "$(_log)" 2>> "$(_err)"; then
 	txt_base "Successfully mounted a tmpfs on '/mnt/tmp'"
 	echo '' | tee -a "$(_log)"
 	# Increases the spacing between columns for nicer reading
@@ -133,7 +133,7 @@ if mount -v --mkdir -t tmpfs -o 'size=100%' tmpfs /mnt/tmp >> "$(_log)"; then
 	findmnt --mountpoint /mnt/tmp \
 		-o TARGET,FSTYPE,SIZE,OPTIONS | \
 		sed -E "s|([[:graph:]]) |\1${_spaces}|g" | \
-		tee -a "$(_log)"
+		tee -a "$(_log)" 2>> "$(_err)"
 	echo '' | tee -a "$(_log)"
 else
 	err_base "Failed to mount a tmpfs on '/mnt/tmp'"
@@ -154,7 +154,7 @@ fish "$ZAI_DIR/sudoers/sudoers.fish"
 # Now we mount the local repo, if enabled, into the new root partition
 if [[ ${ZAI_PKG_LOCALREPO,,} =~ ^true$ ]]; then
 	txt_major "Mounting local repo into chroot..."
-	if mount -v --mkdir --bind /repo /mnt/repo >> "$(_log)"; then
+	if mount -v --mkdir --bind /repo /mnt/repo >> "$(_log)" 2>> "$(_err)"; then
 		txt_minor "Successfully mounted local repo in chroot"
 	else
 		err_major "Failed to mount local repo into chroot"
@@ -164,7 +164,7 @@ fi
 
 # Now we move all the scripts and logs into the new root and redirect future logs into there
 txt_major "Copying '$ZAI_DIR' into chroot..."
-if rsync -rah --no-motd --inplace --verbose "$ZAI_DIR/" '/mnt/zai' >> "$(_log)"; then
+if rsync -rah --no-motd --inplace --verbose "$ZAI_DIR/" '/mnt/zai' >> "$(_log)" 2>> "$(_err)"; then
 	
 	# This just stops scripts from saving logs to a 
 	# directory we would not be preserving
@@ -179,8 +179,8 @@ fi
 
 # Keep our 'pacman.conf' changes so we don't need to do them again
 txt_minor "Moving modified livecd 'pacman.conf' into chroot..."
-mv -v /mnt/etc/pacman.conf  "$ZAI_DIR/backups/etc/pacman.conf"	>> "$(_log)"
-cp -v /etc/pacman.conf		/mnt/etc/pacman.conf				>> "$(_log)"
+mv -v /mnt/etc/pacman.conf  "$ZAI_DIR/backups/etc/pacman.conf"	>> "$(_log)" 2>> "$(_err)"
+cp -v /etc/pacman.conf		/mnt/etc/pacman.conf				>> "$(_log)" 2>> "$(_err)"
 pretty_diff "/mnt/zai/backups/pacman.conf" "/mnt/etc/pacman.conf"
 
 # Save settings for chroot
