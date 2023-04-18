@@ -23,8 +23,16 @@ source "$ZAI_DIR/source/format.fish"
 
 txt_major "Continuing installation in chroot..."
 txt_minor "Setting timezone..."
-ln -sf (_v) /usr/share/zoneinfo/$ZAI_TIME /etc/localtime 	| tee -a "$(_log)"
-hwclock --systohc 											| tee -a "$(_log)"
+if test -e "/usr/share/zoneinfo/$ZAI_TIME"
+	ln -sf -v /usr/share/zoneinfo/$ZAI_TIME /etc/localtime 		>> "$(_log)"
+	hwclock --systohc 											| tee -a "$(_log)"	
+else
+	err_minor "Can't resolve '$ZAI_TIME' to a file"
+	err_base "It is resolved like this:"
+	err_base "/usr/share/zoneinfo/$ZAI_TIME"
+	err_base "Confirm that the above path is valid and update the config if not"
+	abort
+end
 
 # Setting the locale
 bash "$ZAI_DIR/config/locale.bash"
