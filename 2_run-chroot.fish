@@ -47,7 +47,6 @@ if string match -rqi '^true$' $ZAI_PKG_OPTIMISE
 	fish  "$ZAI_DIR/pacman/makepkg.fish"
 end
 
-
 if string match -rqi '^true$' $ZAI_PKG_AUTOKEY
 	# Get pacman to automatically retrieve gpg keys
 	ver_minor "Configuring pacman to automatically retrieve gpg keys..."
@@ -56,7 +55,8 @@ if string match -rqi '^true$' $ZAI_PKG_AUTOKEY
 	pretty_diff "$ZAI_DIR/backups/etc/pacman.d/gnupg/gpg.conf" "/etc/pacman.d/gnupg/gpg.conf"
 end
 
-###################################################################
+##################################################################
+########################## Pacman Start ##########################
 txt_major "Beginning large-scale package install..."
 
 # Install offical packages
@@ -78,7 +78,8 @@ else
 	err_base "This is a critical error"
 	abort
 end
-###################################################################
+########################### Pacman End ###########################
+##################################################################
 
 txt_minor "Updating 'pacman.conf' for normal usage..."
 fish "$ZAI_DIR/pacman/post-install.fish"
@@ -89,8 +90,8 @@ cp (_v) -r $ZAI_DIR/etc/* /etc/	| tee -a "$(_log)"
 txt_minor "Fixing a systemd initramfs issue..."
 touch /etc/vconsole.conf
 
-if test "$ZAI_PKG_PD_REFLECT" -gt '1'
-	txt_minor "Updating 'reflector.conf' to have $ZAI_PKG_PD_REFLECT parallel threads..."
+if test "$ZAI_PKG_PD_REFLECT" -gt 1
+	txt_minor "Updating 'reflector.conf' to use $ZAI_PKG_PD_REFLECT threads..."
 	replace_line "^#--threads.*" "--threads $ZAI_PKG_PD_REFLECT" '/etc/xdg/reflector/reflector.conf'
 end
 
@@ -119,6 +120,7 @@ echo -e "\nSet 'root' password:"
 passwd root
 
 #########################################################
+##################### Systemd Start #####################
 txt_major "Configuring systemd services..."
 
 for service in $ZAI_SYS_ENABLE
@@ -152,6 +154,7 @@ for service in $ZAI_SYS_MASK
 end
 
 txt_minor "Finished configuring services\n"
+###################### Systemd End ######################
 #########################################################
 
 txt_major "Copying post-install scripts to '/root'..."
@@ -161,10 +164,11 @@ for i in (find "$ZAI_DIR/post-install" -mindepth 1 -maxdepth 1)
 	end
 end
 
-echo -e "$major Installation finished!\n"
+txt_major "Installation finished!" 	| tee -a "$(_log)"
+echo ''								| tee -a "$(_log)"
 
 cat /etc/fstab >> "$(_log)"
 bat --paging never --language fstab /etc/fstab
-echo "Please confirm that the 'fstab' is configured correctly." >> "$(_log)"
-echo "Then feel free to reboot, installation is complete!" 		>> "$(_log)"
+echo "Please confirm that the 'fstab' is configured correctly." | tee -a "$(_log)"
+echo "Then feel free to reboot, installation is complete!" 		| tee -a "$(_log)"
 # Done!
