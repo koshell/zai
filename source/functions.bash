@@ -115,12 +115,14 @@ function _v {
 ####### Text formatting and printing functions #######
 
 function _log {
+	# shellcheck disable=SC2154
 	echo "$ZAI_DIR/logs/$_name.log"
 	return	
 }
 
 
 function _err {
+	# shellcheck disable=SC2154
 	echo "$ZAI_DIR/logs/$_name.err'"
 	return	
 }
