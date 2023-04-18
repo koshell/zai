@@ -42,6 +42,13 @@ export ZAI_TIME='Australia/Victoria'
 #
 # Eg: export ZAI_LOCALE=('en_AU.UTF-8 UTF-8' 'en_US.UTF-8 UTF-8' 'ja_JP.UTF-8 UTF-8')
 export ZAI_LOCALE=('en_AU.UTF-8 UTF-8' 'en_US.UTF-8 UTF-8' 'ja_JP.UTF-8 UTF-8')
+
+# At some points the installation will pause to allow you to check the result of important
+# actions and abort '<Ctrl> + C' if you don't like the look of one of the responses
+#
+# This allows you to skip those pauses and just have the script go through everything without blocking
+export ZAI_PAUSESKIP='false'
+
 # There are a few places where various errors
 # can occur that, in theory, we should be able
 # to continue past regardless. This will tell

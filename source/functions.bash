@@ -17,7 +17,11 @@ function update_exports {
 }
 
 function pause {
-	read -n1 -r -s -p "Press any key to continue..."; echo ''
+	if [[ ${ZAI_PAUSESKIP,,} =~ ^true$ ]]; then
+		ver_base "Continuing without pausing..."
+	else
+		read -n1 -r -s -p "Press any key to continue..."; echo ''
+	fi
 	return
 }
 

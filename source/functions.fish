@@ -60,7 +60,14 @@ function abort
 end
 
 function pause
-	bash -c 'read -n1 -r -s -p "Press any key to continue..."'; echo ''
+	if string match -rqi '^true$' $ZAI_PAUSESKIP
+		ver_base "Continuing without pausing..."
+	else
+		# I'm aware calling a whole bash subshell just to achieve a 'pause'
+		# like effect is a big 'ol hack but I couldn't find a good example
+		# of achieving similar behaviour in pure fish
+		bash -c 'read -n1 -r -s -p "Press any key to continue..."'; echo ''
+	end
 	return
 end
 
