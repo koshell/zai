@@ -2,7 +2,6 @@
 
 # For logging
 set _name ( path change-extension '' ( basename ( status filename )))
-
 set -x ZAI_DIR ( path dirname ( status filename ))
 
 # Since this is likely being ran outside of the normal 
@@ -17,8 +16,7 @@ source "$ZAI_DIR/source/format.fish"
 
 txt_major "This script will now attempt to make a list of your current installed packages"
 txt_minor "Do not run this on anything other then an 'arch' or 'arch-based' system or you will experience undefined behaviour"
-pause
-echo '' | tee -a "$(_log)"
+pause; echo '' | tee -a "$(_log)"
 
 # These are all magic functions stolen from the arch wiki, 
 # I have no idea how half them work and can't really debug them if they break

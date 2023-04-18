@@ -23,7 +23,7 @@
 # So when changing the values you only have to consider if it is 'true' or 'anything but true'
 #
 
-# Print a lot of information
+# Should we print a lot of likely unhelpful information
 export ZAI_VERBOSE='true'
 
 # What to set the hostname of the system to,
@@ -94,6 +94,9 @@ export ZAI_AUR_PARU='true'
 # The name of the kernel you want to use for installation
 # as it is listed in the package database
 #
+# If you plan on using multiple kernels put your 'default'
+# one here and the rest in the relevant 'pkglist.list'
+#
 # Eg: export ZAI_KERNEL='linux'
 export ZAI_KERNEL='linux-pure-bcachefs-git'
 
@@ -128,6 +131,13 @@ export ZAI_PKG_MULTILIB='true'
 # Should we use a local repo instead of trying to build packages locally
 export ZAI_PKG_LOCALREPO='true'
 
+# The name the local repo should be listed as, defaults to 'repo' if blank
+export ZAI_PKG_LOCALREPO_NAME='' # WIP
+
+# The path to the local repo, specifically where it is located in the filesystem
+# If blank it defaults to '/repo'
+export ZAI_PKG_LOCALREPO_PATH='' # WIP
+
 # The amount of parallel downloads which should be used
 export ZAI_PKG_PD='16'
 
@@ -140,23 +150,27 @@ export ZAI_PKG_POWERPILL='true'
 # Should we update the 'makepkg.conf' with some optimised values
 export ZAI_PKG_OPTIMISE='true'
 
-# This enabled a function that attempts to agressively clean any
+# This enables a function that attempts to agressively clean any
 # orphans after installation, however it is a bit over-aggressive
 # so is disabled by default
 export ZAI_PKG_CLEAN='false'
 
-# Enable 'auto-key-retrieve' for pacman on new installation
-# This is enabled by default during the livecd to avoid issues of GPG 
-# prompting for user input but is not needed in the installed environment
+# Enable 'auto-key-retrieve' for pacman on new installation, this is 
+# enabled by default during the livecd to avoid issues of GPG prompting 
+# for user input but is a matter of preference for the installed environment
 #
 # Go to the below URL for more information:
 # https://wiki.archlinux.org/title/GnuPG#Searching_and_receiving_keys 
 #
 export ZAI_PKG_AUTOKEY='true'
 
-# Same as above but instead applies 'auto-key-retrieve' 
-# to the users personal gpg.conf instead
+# Same as above but instead applies 'auto-key-retrieve' to the
+# users personal gpg.conf instead, useful for makepkg usage
 export ZAI_PKG_AUTOKEY_USER='true' # WIP
+
+# Should the 'aur' system user have their GPG settings changed
+# regardless of the above options
+export ZAI_PKG_AUTOKEY_AUR='true' # WIP
 
 #############################################
 ## Block Device Settings ####################
