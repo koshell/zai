@@ -122,30 +122,36 @@ passwd root
 txt_major "Configuring systemd services..."
 
 for service in $ZAI_SYS_ENABLE
-	if systemctl --quiet enable $service
-		ver_base "Successfully enabled '$service'"
-	else
-		err_minor "Failed to enable '$service'"
+	if test -n "$service"
+		if systemctl --quiet enable $service
+			ver_base "Successfully enabled '$service'"
+		else
+			err_minor "Failed to enable '$service'"
+		end
 	end
 end
 
 for service in $ZAI_SYS_DISABLE
-	if systemctl --quiet disable $service
-		ver_base "Successfully disabled '$service'"
-	else
-		err_minor "Failed to disable '$service'"
-	end	
+	if test -n "$service"
+		if systemctl --quiet disable $service
+			ver_base "Successfully disabled '$service'"
+		else
+			err_minor "Failed to disable '$service'"
+		end	
+	end
 end
 
 for service in $ZAI_SYS_MASK
-	if systemctl --quiet mask $service
-		ver_base "Successfully masked '$service'"
-	else
-		err_minor "Failed to mask '$service'"
-	end	
+	if test -n "$service"
+		if systemctl --quiet mask $service
+			ver_base "Successfully masked '$service'"
+		else
+			err_minor "Failed to mask '$service'"
+		end	
+	end
 end
 
-txt_minor "Finished configuring services.\n"
+txt_minor "Finished configuring services\n"
 #########################################################
 
 txt_major "Copying post-install scripts to '/root'..."
