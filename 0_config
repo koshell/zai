@@ -29,7 +29,12 @@ export ZAI_VERBOSE='true'
 # so be careful with what you set it to
 export ZAI_NAME='kito'
 
-# The specific timezone the machine should use
+# The specific timezone the machine should use, this should be a valid
+# file when /usr/share/zoneinfo/ is prepended to it
+#
+# For example if your timezone was /usr/share/zoneinfo/Australia/Victoria 
+# you would put: 
+# export ZAI_TIME='Australia/Victoria'
 export ZAI_TIME='Australia/Victoria'
 
 # The list of locales to enable, needs to exactly match what is listed 
