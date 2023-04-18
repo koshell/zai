@@ -19,7 +19,6 @@ if [[ ${ZAI_PKG_LOCALREPO,,} =~ ^true$ ]]; then
 		base-devel \
 		fish \
 		paru \
-		limine \
 		diffutils \
 		nano \
 		bat \
