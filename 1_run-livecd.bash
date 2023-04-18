@@ -2,17 +2,17 @@
 # shellcheck disable=SC2155,SC2046
 #
 readonly __version__='0.0.1'
-readonly __author__='zaiju'
+readonly __author__='zaiju-code'
 
 # Script root directory
 export ZAI_DIR="$(dirname -- "$(readlink -f "$0")")"
 
 # For logging
-_name='run-livecd'
+_name="$(_tmp="$(basename "$0")"; echo "${_tmp%.*}")"
 
 # Load config values
 # shellcheck source=source/config.sh
-source "$ZAI_DIR/config.sh"
+source "$ZAI_DIR/0_config"
 
 # Load colour and format functions
 # shellcheck source=source/format.bash

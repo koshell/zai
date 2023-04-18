@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-_name='pacstrap'
+_name="$(_tmp="$(basename "$0")"; echo "${_tmp%.*}")"
 
 # Load colour and format functions
 # shellcheck source=../source/format.bash

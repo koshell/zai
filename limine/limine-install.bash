@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2155
 
-_name='limine-install'
+_name="$(_tmp="$(basename "$0")"; echo "${_tmp%.*}")"
 
 # Load colour and format variables
 # shellcheck source=../source/format.bash
