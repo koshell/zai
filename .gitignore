@@ -1,4 +1,5 @@
-/pacman/pkg_official
-/pacman/pkg_official.asdeps
-/pacman/pkg_aur
-/pacman/pkg_aur.asdeps
+/pkglist/pkglist.list
+/pkglist/pkgopts.list
+/pkglist/aurlist.list
+/pkglist/auropts.list
+/logs/**
