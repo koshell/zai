@@ -18,5 +18,3 @@ set total_lines (cat $file_list | \
 replace_line "a total of [[:digit:]]* lines" \
     "a total of $total_lines lines" \
     "$ZAI_DIR/README.md"
-
-
