@@ -47,18 +47,20 @@ if string match -rqi '^true$' $ZAI_PKG_OPTIMISE
 	fish  "$ZAI_DIR/pacman/makepkg.fish"
 end
 
-# Get pacman to automatically retrieve gpg keys
-ver_minor "Configuring pacman to automatically retrieve gpg keys..."
-cp (_v) /etc/pacman.d/gnupg/gpg.conf "$ZAI_DIR/backups/etc/pacman.d/gnupg/gpg.conf" | tee -a "$(_log)"
-echo 'auto-key-retrieve' >> /etc/pacman.d/gnupg/gpg.conf
-pretty_diff "$ZAI_DIR/backups/etc/pacman.d/gnupg/gpg.conf" "/etc/pacman.d/gnupg/gpg.conf"
+
+if string match -rqi '^true$' $ZAI_PKG_AUTOKEY
+	# Get pacman to automatically retrieve gpg keys
+	ver_minor "Configuring pacman to automatically retrieve gpg keys..."
+	cp -v /etc/pacman.d/gnupg/gpg.conf "$ZAI_DIR/backups/etc/pacman.d/gnupg/gpg.conf" >> "$(_log)"
+	echo 'auto-key-retrieve' >> /etc/pacman.d/gnupg/gpg.conf
+	pretty_diff "$ZAI_DIR/backups/etc/pacman.d/gnupg/gpg.conf" "/etc/pacman.d/gnupg/gpg.conf"
+end
 
 ###################################################################
 txt_major "Beginning large-scale package install..."
 
 # Install offical packages
 fish "$ZAI_DIR/pacman/install_pkgs.fish"
-
 
 if string match -rqi '^true$' $ZAI_PKG_LOCALREPO
 	# Install AUR packages
@@ -74,8 +76,7 @@ if  pacman -Qqs limine | grep -qE '^limine$'
 else
 	err_major "The bootloader 'limine' wasn't installed"
 	err_base "This is a critical error"
-	err_base "Aborting..."
-	exit 1
+	abort
 end
 ###################################################################
 
@@ -87,6 +88,11 @@ cp (_v) -r $ZAI_DIR/etc/* /etc/	| tee -a "$(_log)"
 
 txt_minor "Fixing a systemd initramfs issue..."
 touch /etc/vconsole.conf
+
+if test "$ZAI_PKG_PD_REFLECT" -gt '1'
+	txt_minor "Updating 'reflector.conf' to have $ZAI_PKG_PD_REFLECT parallel threads..."
+	replace_line "^#--threads.*" "--threads $ZAI_PKG_PD_REFLECT" '/etc/xdg/reflector/reflector.conf'
+end
 
 txt_major "Updating mirrorlist..."
 # This processes each line of 'reflector.conf' and removes comments
@@ -101,8 +107,10 @@ txt_major "Rebuilding package database with new 'pacman.conf'..."
 yes | pacman -Scc  --noconfirm --color always			| tee -a "$(_log)"
 yes | pacman -Syyu --noconfirm --color always --needed 	| tee -a "$(_log)"
 
-# Clean up any orphans agressively
-fish "$ZAI_DIR/pacman/clean_orphans.fish"
+if string match -rqi '^true$' $ZAI_PKG_CLEAN
+	# Clean up any orphans agressively
+	fish "$ZAI_DIR/pacman/clean_orphans.fish"
+end
 
 txt_major "Rebuilding initramfs..."
 mkinitcpio -P | tee -a "$(_log)"
@@ -111,57 +119,33 @@ echo -e "\nSet 'root' password:"
 passwd root
 
 #########################################################
-txt_major "Enabling systemd services..."
+txt_major "Configuring systemd services..."
 
-if systemctl --quiet enable ly
-	ver_base "Successfully enabled 'ly'"
-else
-	err_minor "Failed to enable 'ly'"
+for service in $ZAI_SYS_ENABLE
+	if systemctl --quiet enable $service
+		ver_base "Successfully enabled '$service'"
+	else
+		err_minor "Failed to enable '$service'"
+	end
 end
 
-if systemctl --quiet disable getty@tty2.service
-	ver_base "Successfully disabled 'getty@tty2'"
-else
-	err_minor "Failed to disable 'getty@tty2'"
+for service in $ZAI_SYS_DISABLE
+	if systemctl --quiet disable $service
+		ver_base "Successfully disabled '$service'"
+	else
+		err_minor "Failed to disable '$service'"
+	end	
 end
 
-if systemctl --quiet mask getty@tty2.service
-	ver_base "Successfully masked 'getty@tty2'"
-else
-	err_minor "Failed to mask 'getty@tty2'"
+for service in $ZAI_SYS_MASK
+	if systemctl --quiet mask $service
+		ver_base "Successfully masked '$service'"
+	else
+		err_minor "Failed to mask '$service'"
+	end	
 end
 
-if systemctl --quiet enable NetworkManager
-	ver_base "Successfully enabled 'NetworkManager'"
-else
-	err_minor "Failed to enable 'NetworkManager'"
-end
-
-if systemctl --quiet enable auditd
-	ver_base "Successfully enabled 'auditd'"
-else
-	err_minor "Failed to enable 'auditd'"
-end
-
-if systemctl --quiet enable sshd
-	ver_base "Successfully enabled 'sshd'"
-else
-	err_minor "Failed to enable 'sshd'"
-end
-
-if systemctl --quiet enable libvirtd
-	ver_base "Successfully enabled 'libvirtd'"
-else
-	err_minor "Failed to enable 'libvirtd'"
-end
-
-if systemctl --quiet enable reflector
-	ver_base "Successfully enabled 'reflector'"
-else
-	err_minor "Failed to enable 'reflector'"
-end
-
-txt_minor "Finished enabling services.\n"
+txt_minor "Finished configuring services.\n"
 #########################################################
 
 txt_major "Copying post-install scripts to '/root'..."

@@ -65,9 +65,23 @@ export ZAI_IGNOREFAIL='false'
 export ZAI_VMDEGUB='true'
 
 # Allow some lazy uses of 'sed' which could potentially be destructive
-# it is disabled by default to prevent unintended behavior but can be
+# it is disabled by default to prevent unintended behaviour but can be
 # turned on with this toggle if some edge case is causing issues
 export ZAI_LAZYSED='false'
+
+
+
+#############################################
+## Systemd Settings #########################
+
+# An array of services to enable once installation is complete
+export ZAI_SYS_ENABLE=( 'ly' 'NetworkManager' 'auditd' 'sshd' 'libvirtd' 'reflector' )
+
+# An array of services to disable once installation is complete
+export ZAI_SYS_DISABLE=( 'getty@tty2' )
+
+# An array of services to mask once installation is complete
+export ZAI_SYS_MASK=( 'getty@tty2' )
 
 #############################################
 ## Pacman Settings ##########################
@@ -81,11 +95,32 @@ export ZAI_PKG_LOCALREPO='true'
 # The amount of parallel downloads which should be used
 export ZAI_PKG_PD='16'
 
+# The amount of parallel downloads which should be used for 'reflector'
+export ZAI_PKG_PD_REFLECT='16'
+
 # Patch pacman.conf to resolve an issue with powerpill
 export ZAI_PKG_POWERPILL='true'
 
 # Should we update the 'makepkg.conf' with some optimised values
 export ZAI_PKG_OPTIMISE='true'
+
+# This enabled a function that attempts to agressively clean any
+# orphans after installation, however it is a bit over-aggressive
+# so is disabled by default
+export ZAI_PKG_CLEAN='false'
+
+# Enable 'auto-key-retrieve' for pacman on new installation
+# This is enabled by default during the livecd to avoid issues of GPG 
+# prompting for user input but is not needed in the installed environment
+#
+# Go to the below URL for more information:
+# https://wiki.archlinux.org/title/GnuPG#Searching_and_receiving_keys 
+#
+export ZAI_PKG_AUTOKEY='true'
+
+# Same as above but instead applies 'auto-key-retrieve' 
+# to the users personal gpg.conf instead
+export ZAI_PKG_AUTOKEY_USER='true'
 
 #############################################
 ## Block Device Settings ####################
@@ -109,4 +144,7 @@ export ZAI_BLK_PP='p'
 # Should we encrypt the partitions
 # WIP
 export ZAI_BLK_CRYPT='true'
+
+# Does this drive support 'discard' and if so should we enable it
+export ZAI_BLK_DISCARD='true'
 

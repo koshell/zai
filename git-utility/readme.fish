@@ -1,6 +1,6 @@
 #!/usr/bin/env fish
 
-set -x ZAI_DIR '.'
+set -x ZAI_DIR  ( path dirname  ( path dirname ( status filename )))
 
 # Load colour and format variables
 source "$ZAI_DIR/source/format.fish"
