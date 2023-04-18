@@ -89,14 +89,6 @@ function replace_line {
 	return $_sed_exit
 }
 
-# Diffs two files and outputs with bat
-function pretty_diff {
-	diff -u "$1" "$2" --minimal | \
-	tee -a "$(_resolve_log)" | \
-	bat --language diff --paging never --file-name "$1 -> $2" -
-	return
-}
-
 ######################################################	
 ### Make commands run verbose if enabled in config ###
 
