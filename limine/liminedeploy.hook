@@ -1,0 +1,9 @@
+[Trigger]
+Operation = Upgrade
+Type = Package
+Target = limine
+
+[Action]
+Description = Deploying Limine after upgrade...
+When = PostTransaction
+Exec = /bin/sh -c '/usr/bin/cp -v /usr/share/limine/BOOTX64.EFI /boot/EFI/BOOT/BOOTX64.EFI; /usr/bin/cp -v /usr/share/limine/limine.sys /boot/limine.sys'
