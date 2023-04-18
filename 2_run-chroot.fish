@@ -79,7 +79,7 @@ else
 	fish "$ZAI_DIR/pacman/build_aur.fish"
 end
 
-if  pacman -Qqs limine | grep -qE '^limine$'
+if pacman -Qq limine > /dev/null
 	# Installing limine
 	bash "$ZAI_DIR/limine/limine-install.bash"
 else
