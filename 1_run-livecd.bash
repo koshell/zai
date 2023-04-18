@@ -12,7 +12,7 @@ _name='run-livecd'
 
 # Load config values
 # shellcheck source=source/config.sh
-source "$ZAI_DIR/source/config.sh"
+source "$ZAI_DIR/config.sh"
 
 # Load colour and format functions
 # shellcheck source=source/format.bash

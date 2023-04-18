@@ -7,15 +7,16 @@
 #
 # Boolean settings are just being tested against case insensitive 'true' like below:
 # 
-#### Bash:
-## if [[ ${var,,} =~ ^true$ ]]; then
-##     ~do something~
-## fi
-##
-#### Fish:
-## if string match -rqi '^true$' $var
-##     ~do something~
-## end
+######## Bash:
+### if [[ ${var,,} =~ ^true$ ]]; then
+###     ~do something~
+### fi
+#
+#
+######## Fish:
+### if string match -rqi '^true$' $var
+###     ~do something~
+### end
 #
 # So when changing the values you only have to consider if it is 'true' or 'anything but true'
 #
