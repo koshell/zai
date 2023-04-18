@@ -49,15 +49,10 @@ export ZAI_LOCALE=('en_AU.UTF-8 UTF-8' 'en_US.UTF-8 UTF-8' 'ja_JP.UTF-8 UTF-8')
 # This allows you to skip those pauses and just have the script go through everything without blocking
 export ZAI_PAUSESKIP='false'
 
-# There are a few places where various errors
-# can occur that, in theory, we should be able
-# to continue past regardless. This will tell
-# the script to attempt to continue 
-# or immediately fail and exit
+# This stops any errors from aborting installation, 
+# we will continue till something explodes
 #
-# Errors that are guaranteed to cause issues will
-# cause the script to exit regardless of this setting
-#
+# Not recommended unless you are debugging
 export ZAI_IGNOREFAIL='false'
 
 # Should we create symlinks to ease testing inside a VM and any 
@@ -68,8 +63,6 @@ export ZAI_VMDEGUB='true'
 # it is disabled by default to prevent unintended behaviour but can be
 # turned on with this toggle if some edge case is causing issues
 export ZAI_LAZYSED='false'
-
-
 
 #############################################
 ## Systemd Settings #########################
@@ -120,7 +113,7 @@ export ZAI_PKG_AUTOKEY='true'
 
 # Same as above but instead applies 'auto-key-retrieve' 
 # to the users personal gpg.conf instead
-export ZAI_PKG_AUTOKEY_USER='true'
+export ZAI_PKG_AUTOKEY_USER='true' # WIP
 
 #############################################
 ## Block Device Settings ####################
@@ -142,9 +135,8 @@ export ZAI_BLK='nvme0n1'
 export ZAI_BLK_PP='p'
 
 # Should we encrypt the partitions
-# WIP
-export ZAI_BLK_CRYPT='true'
+export ZAI_BLK_CRYPT='true'  # WIP
 
 # Does this drive support 'discard' and if so should we enable it
-export ZAI_BLK_DISCARD='true'
+export ZAI_BLK_DISCARD='true'  # WIP
 
