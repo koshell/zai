@@ -62,6 +62,9 @@ txt_major "Beginning large-scale package install..."
 txt_minor "Refreshing and updating repo database..."
 pacman -Syu --noconfirm --color always 2>> "$(_err)" | tee -a "$(_log)" 
 
+# Create AUR user
+fish "$ZAI_DIR/pacman/aur_user.fish"
+
 # Install kernel
 fish "$ZAI_DIR/pacman/install_kernel.fish"
 

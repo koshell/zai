@@ -67,6 +67,17 @@ export ZAI_VMDEGUB='true'
 export ZAI_LAZYSED='false'
 
 #############################################
+## AUR Settings #############################
+
+# Use 'paru' to install AUR packages rather
+# then manually installing them with 'makepkg'
+#
+# This has the advantage of allowing recursive 
+# AUR dependency resolution which we don't do
+# if we are manually installing with 'makepkg'
+export ZAI_AUR_PARU='true'
+
+#############################################
 ## Kernel Settings ##########################
 
 # The name of the kernel you want to use for installation
