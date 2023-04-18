@@ -186,5 +186,5 @@ pretty_diff "/mnt/zai/backups/pacman.conf" "/mnt/etc/pacman.conf"
 # Save settings for chroot
 fish "$ZAI_DIR/config/preserve_env.fish"; echo ''
 
-txt_major "If this all looks good, use 'arch-chroot /mnt' and continue installation with '/zai/run-chroot.fish'."
+txt_major "If this all looks good, use 'arch-chroot /mnt' and continue installation with '/zai/run-chroot.fish'"
 # Done!
