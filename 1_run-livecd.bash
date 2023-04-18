@@ -51,18 +51,22 @@ fi
 if [[ ${ZAI_VMDEGUB,,} =~ ^true$ ]]; then
 	txt_major "Creating symlinks for testing..."
 	# shellcheck disable=SC2129
+	ln -vs /dev/vda  "/dev/${ZAI_BLK}"					>> "$(_log)" 
+	ln -vs /dev/vda1 "/dev/${ZAI_BLK}${ZAI_BLK_PP}1"	>> "$(_log)"
+	ln -vs /dev/vda2 "/dev/${ZAI_BLK}${ZAI_BLK_PP}2"	>> "$(_log)"
+	ln -vs /dev/vda3 "/dev/${ZAI_BLK}${ZAI_BLK_PP}3"	>> "$(_log)"
+	ln -vs /dev/vda4 "/dev/${ZAI_BLK}${ZAI_BLK_PP}4"	>> "$(_log)"
 fi
 
 # Creating backup directory
-mkdir $(_v) -p /mnt/zai/backups
+mkdir -v -p /mnt/zai/backups >> "$(_log)"
 
 # Get pacman to automatically retrieve gpg keys
 ver_minor "Setting 'pacman' to auto rereieve gpg keys..."
 echo 'auto-key-retrieve' >> /etc/pacman.d/gnupg/gpg.conf 
 
 txt_major "Installing 'bat', 'rsync', and 'fish' for easier scripting..."
-pacman -Sy --noconfirm --needed --color always bat fish rsync
-########
+pacman -Sy --noconfirm --needed --color always bat fish rsync | tee -a "$(_log)"
 
 # Sometimes file permissions get messed up during the copy process, this attempts to fix them
 txt_major "Making sure file permissions are correct..."
@@ -73,7 +77,9 @@ find "$ZAI_DIR" -mindepth 1 -type f | \
 # Just prints time and date information so the user is aware
 # of any issues now rather then later
 txt_major "Double check that the time & date is correct:"
-echo ''; timedatectl; echo ''
+echo ''		| tee -a "$(_log)"
+timedatectl | tee -a "$(_log)"
+echo '' 	| tee -a "$(_log)"
 pause
 
 # Partition '$ZAI_BLOCK'
@@ -103,6 +109,7 @@ bash "$ZAI_DIR/pacman/pacstrap.bash"
 # The user is expected to double check it before rebooting
 txt_major "Copying basic 'fstab' config into new root partition..."
 genfstab -U /mnt >> /mnt/etc/fstab
+cat /mnt/etc/fstab >> "$(_log)"
 bat --paging never --language fstab /mnt/etc/fstab
 
 # Having a functioning tmpfs inside the new root will make compilation
@@ -147,7 +154,7 @@ fish "$ZAI_DIR/sudoers/sudoers.fish"
 # Now we mount the local repo, if enabled, into the new root partition
 if [[ ${ZAI_PKG_LOCALREPO,,} =~ ^true$ ]]; then
 	txt_major "Mounting local repo into chroot..."
-	if mount $(_v) --mkdir --bind /repo /mnt/repo; then
+	if mount -v --mkdir --bind /repo /mnt/repo >> "$(_log)"; then
 		txt_minor "Successfully mounted local repo in chroot"
 	else
 		err_major "Failed to mount local repo into chroot"
@@ -157,7 +164,7 @@ fi
 
 # Now we move all the scripts and logs into the new root and redirect future logs into there
 txt_major "Copying '$ZAI_DIR' into chroot..."
-if rsync -ra "$ZAI_DIR/" '/mnt/zai'; then
+if rsync -rah --no-motd --inplace --verbose "$ZAI_DIR/" '/mnt/zai' >> "$(_log)"; then
 	
 	# This just stops scripts from saving logs to a 
 	# directory we would not be preserving
@@ -172,8 +179,8 @@ fi
 
 # Keep our 'pacman.conf' changes so we don't need to do them again
 txt_minor "Moving modified livecd 'pacman.conf' into chroot..."
-mv $(_v) /mnt/etc/pacman.conf  /mnt/zai/backups/pacman.conf
-cp $(_v) /etc/pacman.conf  	/mnt/etc/pacman.conf
+mv -v /mnt/etc/pacman.conf  "$ZAI_DIR/backups/etc/pacman.conf"	>> "$(_log)"
+cp -v /etc/pacman.conf		/mnt/etc/pacman.conf				>> "$(_log)"
 pretty_diff "/mnt/zai/backups/pacman.conf" "/mnt/etc/pacman.conf"
 
 # Save settings for chroot
