@@ -64,11 +64,11 @@ txt_major "Installing 'bat', 'rsync', and 'fish' for easier scripting..."
 pacman -Sy --noconfirm --needed --color always bat fish rsync
 ########
 
+# Sometimes file permissions get messed up during the copy process, this attempts to fix them
 txt_major "Making sure file permissions are correct..."
-find "$ZAI_DIR" -type f | \
-grep -iE '(\.bash)|(\.fish)|(\.sh)' | \
-xargs chmod +x -c
-########
+find "$ZAI_DIR" -mindepth 1 -type f | \
+	grep -iE '(\.bash)|(\.fish)|(\.sh)|(^config$)' | \
+	xargs chmod +x -c | tee -a "$(_log)" 
 
 # Just prints time and date information so the user is aware
 # of any issues now rather then later
