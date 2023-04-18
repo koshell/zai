@@ -23,6 +23,9 @@ source "$ZAI_DIR/source/format.bash"
 # shellcheck source=source/functions.bash
 source "$ZAI_DIR/source/functions.bash"
 
+# Needed to set '_backup_dir' and '_log_dir'
+reset_dirs
+
 if [[ ! $ZAI_DIR == '/zai' ]]; then
 	clear
 	echo -n "Starting " | tee -a "$(_log)"
@@ -46,6 +49,9 @@ if [[ ! $ZAI_DIR == '/zai' ]]; then
 		abort
 	fi
 fi
+
+# Need to update '_backup_dir' and '_log_dir' if we moved $ZAI_DIR
+reset_dirs
 
 # VM testing
 if [[ ${ZAI_VMDEGUB,,} =~ ^true$ ]]; then
@@ -179,9 +185,7 @@ fi
 
 # Keep our 'pacman.conf' changes so we don't need to do them again
 txt_minor "Moving modified livecd 'pacman.conf' into chroot..."
-mv -v /mnt/etc/pacman.conf  "$ZAI_DIR/backups/etc/pacman.conf"	>> "$(_log)" 2>> "$(_err)"
-cp -v /etc/pacman.conf		/mnt/etc/pacman.conf				>> "$(_log)" 2>> "$(_err)"
-pretty_diff "/mnt/zai/backups/pacman.conf" "/mnt/etc/pacman.conf"
+pretty_diff "$_backup_dir/etc/pacman.conf"    "/mnt/etc/pacman.conf"
 
 # Save settings for chroot
 fish "$ZAI_DIR/config/preserve_env.fish"; echo ''

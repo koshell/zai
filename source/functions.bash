@@ -7,7 +7,7 @@ source "${ZAI_DIR}/source/format.bash"
 # Diffs two files and outputs with bat
 function pretty_diff {
 	diff -u "$1" "$2" --minimal | \
-	tee -a "$(_resolve_log)" | \
+	tee -a "$(_log)" | \
 	bat --language diff --paging never --file-name "$1 -> $2" -
 	return
 }
@@ -47,6 +47,7 @@ function abort {
 # Wrapper for 'sed'
 function replace_line {
 	
+	############################################################
 	####### Check for, and protect against, unsafe usage #######
 	
 	if [[ -z "$1" ]]; then
@@ -75,6 +76,7 @@ function replace_line {
 	fi
 
 	############################################################
+	############################################################
     
 	# Make variable usage a bit clearer
 	readonly _search="$1"
@@ -101,41 +103,87 @@ function _verbose {
 	fi
 }
 
+######################################################	
+###### Set directories to store transient files ######
 
-function _v {
-	if [[ ${ZAI_VERBOSE,,} =~ ^true$ ]]; then
-		echo '-v'
-		return
+function reset_dirs {
+	_log_dir="$(_log_dir)"
+	_backup_dir="$(_backup_dir)"
+	return
+}
+
+function _log_dir {
+	if [[ -n "$ZAI_LOGS_DIR" ]]; then
+		if [[ -d "$ZAI_LOGS_DIR" ]]; then
+			echo "$ZAI_LOGS_DIR"
+		else
+			{ \
+				echo "The config option '\$ZAI_LOGS_DIR' is set but doesn't resolve to a directory"; \
+				echo "\$ZAI_LOGS_DIR = $ZAI_LOGS_DIR"; \
+				echo "Defaulting to '\$ZAI_DIR/logs'"; \
+			} 								 >> "$ZAI_DIR/logs/$_name.err"
+			echo "$ZAI_DIR/logs" | tee --append "$ZAI_DIR/logs/$_name.err"
+			echo '' 						 >> "$ZAI_DIR/logs/$_name.err"
+		fi
 	else
-		return
+		echo "$ZAI_DIR/logs"
 	fi
+	return
+}
+
+function _backup_dir {
+	if [[ -n "$ZAI_BACKUPS_DIR" ]]; then
+		if [[ -d "$ZAI_BACKUPS_DIR" ]]; then
+			echo "$ZAI_BACKUPS_DIR"
+		else
+			{ \
+				echo "The config option '\$ZAI_BACKUPS_DIR' is set but doesn't resolve to a directory"; \
+				echo "\$ZAI_BACKUPS_DIR = $ZAI_BACKUPS_DIR"; \
+				echo "Defaulting to '\$ZAI_DIR/backups"; \
+			} 									>> "$ZAI_DIR/logs/$_name.err"
+			echo "$ZAI_DIR/backups" | tee --append "$ZAI_DIR/logs/$_name.err"
+			echo '' 							>> "$ZAI_DIR/logs/$_name.err"
+		fi
+	else
+		echo "$ZAI_DIR/backups"
+	fi
+	return
 }
 
 ######################################################	
 ####### Text formatting and printing functions #######
 
 function _log {
+	if [[ -z $_log_dir ]]; then
+		_log_dir="$(_log_dir)"
+	fi
 	# shellcheck disable=SC2154
-	echo "$ZAI_DIR/logs/$_name.log"
+	echo "$_log_dir/$_name.log"
 	return	
 }
 
 
 function _err {
+	if [[ -z $_log_dir ]]; then
+		_log_dir="$(_log_dir)"
+	fi
 	# shellcheck disable=SC2154
-	echo "$ZAI_DIR/logs/$_name.err'"
+	echo "$_log_dir/$_name.err"
 	return	
 }
 
 
 # Creates '==> $1' with colour and formatting
 function txt_major {
+	if [[ -z $_log_dir ]]; then
+		_log_dir="$(_log_dir)"
+	fi
 	_txtclean		# Reset text formatting
 	_txtgrn			# Set text green
-	echo -n '==' 	| tee --append "$ZAI_DIR/logs/$_name.log"
-	echo -n '> ' 	| tee --append "$ZAI_DIR/logs/$_name.log"
+	echo -n '==' 	| tee --append "$_log_dir/$_name.log"
+	echo -n '> ' 	| tee --append "$_log_dir/$_name.log"
 	_txtclean		# Reset text formatting
-	echo -e "$1" 	| tee --append "$ZAI_DIR/logs/$_name.log"
+	echo -e "$1" 	| tee --append "$_log_dir/$_name.log"
 	
 	_txtclean
 	return 
@@ -143,12 +191,15 @@ function txt_major {
 
 # Creates '-->  $1' with colour and formatting
 function txt_minor {
+	if [[ -z $_log_dir ]]; then
+		_log_dir="$(_log_dir)"
+	fi
 	_txtclean		# Reset text formatting
 	_txtgrn			# Set text green
-	echo -n '--'  	| tee --append "$ZAI_DIR/logs/$_name.log"
-	echo -n '>  ' 	| tee --append "$ZAI_DIR/logs/$_name.log"
+	echo -n '--'  	| tee --append "$_log_dir/$_name.log"
+	echo -n '>  ' 	| tee --append "$_log_dir/$_name.log"
 	_txtclean		# Reset text formatting
-	echo -e "$1"	| tee --append "$ZAI_DIR/logs/$_name.log"
+	echo -e "$1"	| tee --append "$_log_dir/$_name.log"
 	
 	_txtclean
 	return
@@ -156,12 +207,15 @@ function txt_minor {
 
 # Creates ' ->   $1' with colour and formatting
 function txt_base {
+	if [[ -z $_log_dir ]]; then
+		_log_dir="$(_log_dir)"
+	fi
 	_txtclean		# Reset text formatting
 	_txtgrn			# Set text green
-	echo -n ' -' 	| tee --append "$ZAI_DIR/logs/$_name.log"
-	echo -n '>   ' 	| tee --append "$ZAI_DIR/logs/$_name.log"
+	echo -n ' -' 	| tee --append "$_log_dir/$_name.log"
+	echo -n '>   ' 	| tee --append "$_log_dir/$_name.log"
 	_txtclean		# Reset text formatting
-	echo -e "$1" 	| tee --append "$ZAI_DIR/logs/$_name.log"
+	echo -e "$1" 	| tee --append "$_log_dir/$_name.log"
 	
 	_txtclean
 	return
@@ -169,12 +223,15 @@ function txt_base {
 
 # Creates '==> $1' with colour and formatting
 function err_major {
+	if [[ -z $_log_dir ]]; then
+		_log_dir="$(_log_dir)"
+	fi
 	_txtclean		>&2	# Reset text formatting
 	_txtred			>&2	# Set text red
-	echo -n '=='  	| tee --append "$ZAI_DIR/logs/$_name.log"	>&2
-	echo -n '> '  	| tee --append "$ZAI_DIR/logs/$_name.log"	>&2
+	echo -n '=='  	| tee --append "$_log_dir/$_name.log"	>&2
+	echo -n '> '  	| tee --append "$_log_dir/$_name.log"	>&2
 	_txtclean		>&2	# Reset text formatting
-	echo -e "$1"	| tee --append "$ZAI_DIR/logs/$_name.log"	>&2
+	echo -e "$1"	| tee --append "$_log_dir/$_name.log"	>&2
 	
 	_txtclean
 	return 
@@ -182,12 +239,15 @@ function err_major {
 
 # Creates '-->  $1' with colour and formatting
 function err_minor {
+	if [[ -z $_log_dir ]]; then
+		_log_dir="$(_log_dir)"
+	fi
 	_txtclean		>&2	# Reset text formatting
 	_txtred			>&2	# Set text red
-	echo -n '--' 	| tee --append "$ZAI_DIR/logs/$_name.log" 	>&2
-	echo -n '>  ' 	| tee --append "$ZAI_DIR/logs/$_name.log" 	>&2
+	echo -n '--' 	| tee --append "$_log_dir/$_name.log" >&2
+	echo -n '>  ' 	| tee --append "$_log_dir/$_name.log" >&2
 	_txtclean		>&2	# Reset text formatting
-	echo -e "$1"  	| tee --append "$ZAI_DIR/logs/$_name.log"	>&2
+	echo -e "$1"  	| tee --append "$_log_dir/$_name.log"	>&2
 	
 	_txtclean
 	return
@@ -195,12 +255,15 @@ function err_minor {
 
 # Creates ' ->   $1' with colour and formatting
 function err_base {
+	if [[ -z $_log_dir ]]; then
+		_log_dir="$(_log_dir)"
+	fi
 	_txtclean		>&2	# Reset text formatting
 	_txtred			>&2	# Set text red
-	echo -n ' -' 	| tee --append "$ZAI_DIR/logs/$_name.log" 	>&2
-	echo -n '>   ' 	| tee --append "$ZAI_DIR/logs/$_name.log" 	>&2
+	echo -n ' -' 	| tee --append "$_log_dir/$_name.log" >&2
+	echo -n '>   ' 	| tee --append "$_log_dir/$_name.log" >&2
 	_txtclean		>&2	# Reset text formatting
-	echo -e "$1"  	| tee --append "$ZAI_DIR/logs/$_name.log"	>&2
+	echo -e "$1"  	| tee --append "$_log_dir/$_name.log"	>&2
 
 	_txtclean
 	return
@@ -210,12 +273,15 @@ function err_base {
 # only if $ZAI_VERBOSE is 'true'
 function ver_major {
 	if [[ ${ZAI_VERBOSE,,} =~ ^true$ ]]; then
+		if [[ -z $_log_dir ]]; then
+			_log_dir="$(_log_dir)"
+		fi
 		_txtclean		# Reset text formatting
 		_txtblu			# Set text blue
-		echo -n '==' 	| tee --append "$ZAI_DIR/logs/$_name.log"
-		echo -n '>  ' 	| tee --append "$ZAI_DIR/logs/$_name.log"
+		echo -n '==' 	| tee --append "$_log_dir/$_name.log"
+		echo -n '>  ' 	| tee --append "$_log_dir/$_name.log"
 		_txtclean		# Reset text formatting
-		echo -e "$1" 	| tee --append "$ZAI_DIR/logs/$_name.log"
+		echo -e "$1" 	| tee --append "$_log_dir/$_name.log"
 
 		_txtclean
 	fi
@@ -226,12 +292,15 @@ function ver_major {
 # only if $ZAI_VERBOSE is 'true'
 function ver_minor {
 	if [[ ${ZAI_VERBOSE,,} =~ ^true$ ]]; then
+		if [[ -z $_log_dir ]]; then
+			_log_dir="$(_log_dir)"
+		fi
 		_txtclean		# Reset text formatting
 		_txtblu			# Set text blue
-		echo -n '--' 	| tee --append "$ZAI_DIR/logs/$_name.log"
-		echo -n '>   ' 	| tee --append "$ZAI_DIR/logs/$_name.log"
+		echo -n '--' 	| tee --append "$_log_dir/$_name.log"
+		echo -n '>   ' 	| tee --append "$_log_dir/$_name.log"
 		_txtclean		# Reset text formatting
-		echo -e "$1" 	| tee --append "$ZAI_DIR/logs/$_name.log"
+		echo -e "$1" 	| tee --append "$_log_dir/$_name.log"
 
 		_txtclean
 	fi
@@ -242,12 +311,15 @@ function ver_minor {
 # only if $ZAI_VERBOSE is 'true'
 function ver_base {
 	if [[ ${ZAI_VERBOSE,,} =~ ^true$ ]]; then
+		if [[ -z $_log_dir ]]; then
+			_log_dir="$(_log_dir)"
+		fi
 		_txtclean		# Reset text formatting
 		_txtblu			# Set text blue
-		echo -n '  ' 	| tee --append "$ZAI_DIR/logs/$_name.log"
-		echo -n '>    ' | tee --append "$ZAI_DIR/logs/$_name.log"
+		echo -n '  ' 	| tee --append "$_log_dir/$_name.log"
+		echo -n '>    ' | tee --append "$_log_dir/$_name.log"
 		_txtclean		# Reset text formatting
-		echo -e "$1" 	| tee --append "$ZAI_DIR/logs/$_name.log"
+		echo -e "$1" 	| tee --append "$_log_dir/$_name.log"
 
 		_txtclean
 	fi

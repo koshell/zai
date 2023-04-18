@@ -1,0 +1,12 @@
+# This should be all the pacman commands required to 
+# install packages with makepkg or similar
+Cmnd_Alias PACMAN = \
+	/usr/bin/pacman -Qq *,  \
+	/usr/bin/pacman -Rns *, \
+	/usr/bin/pacman -S *,   \
+	/usr/bin/pacman -T *,   \
+	/usr/bin/pacman -U *,       
+
+# Allow the 'makepkg' group access to these commands without a password
+# This should probably only be giving to system users
+%makepkg ALL=(root:root) NOPASSWD: SETENV: PACMAN

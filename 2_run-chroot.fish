@@ -23,6 +23,9 @@ source "$ZAI_DIR/source/functions.fish"
 # Load colour and format variables
 source "$ZAI_DIR/source/format.fish"
 
+# Needed to set '_backup_dir' and '_log_dir'
+reset_dirs
+
 txt_major "Continuing installation in chroot..."
 txt_minor "Setting timezone..."
 if test -e "/usr/share/zoneinfo/$ZAI_TIME"
@@ -52,7 +55,7 @@ if string match -rqi '^true$' $ZAI_PKG_AUTOKEY
 	ver_minor "Configuring pacman to automatically retrieve gpg keys..."
 	cp -v /etc/pacman.d/gnupg/gpg.conf "$ZAI_DIR/backups/etc/pacman.d/gnupg/gpg.conf" >> "$(_log)"
 	echo 'auto-key-retrieve' >> /etc/pacman.d/gnupg/gpg.conf
-	pretty_diff "$ZAI_DIR/backups/etc/pacman.d/gnupg/gpg.conf" "/etc/pacman.d/gnupg/gpg.conf"
+	pretty_diff "$_backup_dir/etc/pacman.d/gnupg/gpg.conf" '/etc/pacman.d/gnupg/gpg.conf'
 end
 
 ##################################################################

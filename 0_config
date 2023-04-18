@@ -66,6 +66,17 @@ export ZAI_VMDEGUB='true'
 # turned on with this toggle if some edge case is causing issues
 export ZAI_LAZYSED='false'
 
+# Disable the root powers of the 'wheel' group and instead use the 'sudo' group
+export ZAI_DISABLE_WHEEL='true'
+
+# Specify the location backups should be saved
+# leave blank to default to '$ZAI_DIR/backups'
+export ZAI_BACKUPS_DIR='' # WIP
+
+# Specify the location logs should be saved
+# leave blank to default to '$ZAI_DIR/logs'
+export ZAI_LOGS_DIR='' # WIP
+
 #############################################
 ## AUR Settings #############################
 
