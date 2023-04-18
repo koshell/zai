@@ -32,6 +32,11 @@ export ZAI_NAME='kito'
 # The specific timezone the machine should use
 export ZAI_TIME='Australia/Victoria'
 
+# The list of locales to enable, needs to exactly match what is listed 
+# inside /etc/locale.gen so I recommended you double check that first
+#
+# Eg: export ZAI_LOCALE=('en_AU.UTF-8 UTF-8' 'en_US.UTF-8 UTF-8' 'ja_JP.UTF-8 UTF-8')
+export ZAI_LOCALE=('en_AU.UTF-8 UTF-8' 'en_US.UTF-8 UTF-8' 'ja_JP.UTF-8 UTF-8')
 # There are a few places where various errors
 # can occur that, in theory, we should be able
 # to continue past regardless. This will tell

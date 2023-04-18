@@ -13,18 +13,25 @@ source "${ZAI_DIR}/source/functions.bash"
 
 txt_major "Setting the locale..."
 
-txt_minor "Backing up original 'locale.gen'..."
-cp -v /etc/locale.gen /etc/locale.gen.bak
+ver_base "Backing up original 'locale.gen'..."
+cp -v /etc/locale.gen "$ZAI_DIR/backups/etc/locale.gen" >> "$(_log)"
 
-txt_minor "Enabling 'en_AU.UTF-8', 'en_US.UTF-8', and 'ja_JP.UTF-8'..."
-sed -i 's/#en_AU.UTF-8 UTF-8/en_AU.UTF-8 UTF-8/g' /etc/locale.gen
-sed -i 's/#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/g' /etc/locale.gen
-sed -i 's/#ja_JP.UTF-8 UTF-8/ja_JP.UTF-8 UTF-8/g' /etc/locale.gen
+for locale in "${ZAI_LOCALE[@]}"; do
 
-diff -u /etc/locale.gen.bak /etc/locale.gen --minimal | \
-tee -a /root/locale-sed.log | \
-bat --language diff --paging never --file-name 'locale.gen.bak -> locale.gen' -
+	# It's easy to accidentally leave trailing or leading whitespace 
+	# that confuses sed, this quickly strips that whitespace
+	locale="$(echo "$locale" | awk '{$1=$1;print}')"
+	txt_minor "Enabling '$locale'..."
+	if replace_line "#${locale}" "${locale}" "/etc/locale.gen"; then
+		txt_base "Successfully enabled '$locale'"
+	else
+		err_base "Failed to enable '$locale'"
+	fi
+done
+
+diff -u "${ZAI_DIR}/backups/etc/locale.gen" /etc/locale.gen --minimal >> "$(_log)"
+pretty_diff "${ZAI_DIR}/backups/etc/locale.gen" /etc/locale.gen
 
 txt_minor "Generating locale..."
-locale-gen | tee -a /root/locale-gen.log 
+locale-gen | tee -a "$(_log)"
 txt_major "Finished setting the locale"
