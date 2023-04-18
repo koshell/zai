@@ -23,8 +23,6 @@ source "$ZAI_DIR/source/format.bash"
 source "$ZAI_DIR/source/functions.bash"
 
 if [[ ! $ZAI_DIR == '/zai' ]]; then
-	_log='/tmp/zai.log'
-	_err='/tmp/zai.err'
 	clear
 	echo -n "Starting " | tee -a "$(_log)"
 	_txtbold
