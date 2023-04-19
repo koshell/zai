@@ -35,11 +35,11 @@ if [[ ! $ZAI_DIR == '/zai' ]]; then
 
 	txt_major "Copying scripts to '/zai'..."
 	zai_verbose "$( rm -rfv /zai 2>> "$(_err)" )"
-	if zai_verbose "$( cp -avr "${ZAI_DIR}" '/zai' 2>> "$(_err)" )"; then
+	if zai_verbose "$( cp -avr "${ZAI_DIR}/*" '/zai' 2>> "$(_err)" )"; then
 		export ZAI_DIR='/zai'
 		txt_major "Passing execution into '/zai'..."
 		# shellcheck disable=SC2093
-		exec '/zai/run-livecd.bash'
+		exec '/zai/1_run-livecd.bash'
 		# If exec succeeded we shouldn't ever run the following command
 		err_major "Failed to pass execution into '/zai'"
 		abort
