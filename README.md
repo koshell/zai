@@ -2,7 +2,7 @@
 Zaiju's Arch Installer
 
 ### Usage
-**HEAVILY WIP**
+**HEAVILY WIP**    
 Currently the design is for you to preconfigure the values of '0_config' to taste. 
 
 Then use '0_generate_pkglists.fish' to generate a list of your currently installed Arch packages which can then be reinstalled as part of the installation process.

@@ -66,8 +66,37 @@ export ZAI_VMDEGUB='true'
 # turned on with this toggle if some edge case is causing issues
 export ZAI_LAZYSED='false'
 
-# Disable the root powers of the 'wheel' group and instead use the 'sudo' group
-export ZAI_DISABLE_WHEEL='true'
+#############################################
+## User Account Settings ####################
+
+# List of normal users to create
+export ZAI_USERS=( 'zaiju' ) #WIP
+
+# List of users that should be given sudo powers
+export ZAI_USERS_SUDOS=( 'zaiju' ) #WIP
+
+# List of groups all users should get
+export ZAI_USERS_GROUPS=( 'steam' ) #WIP
+
+# List of groups only sudos should get
+#
+# Of note, you do not need to specifc the sudoers group (wheel, sudos) 
+# in this list, it will be automatically resolved
+#
+export ZAI_USERS_GROUPS_SUDOS=( 'libvirt' ) #WIP
+
+#############################################
+## Sudoers Settings #########################
+
+# Disable the root powers of the 'wheel' group
+export ZAI_SUDO_DISABLE_WHEEL='true' # WIP
+
+# If not blank a new group is created that is functionally
+# identical to 'wheel' but with a different name
+export ZAI_SUDO_ADD_GROUP='sudos' # WIP
+
+#############################################
+## Transient File Storage ###################
 
 # Specify the location backups should be saved
 # leave blank to default to '$ZAI_DIR/backups'
@@ -87,6 +116,20 @@ export ZAI_LOGS_DIR='' # WIP
 # AUR dependency resolution which we don't do
 # if we are manually installing with 'makepkg'
 export ZAI_AUR_PARU='true'
+
+# If we should remove the 'aur' user, created to allow
+# livecd compilation, once installation is complete
+export ZAI_AUR_REMOVEUSER='false'
+
+# Should we use a local repo instead of trying to build packages locally
+export ZAI_AUR_LOCALREPO='true'
+
+# The name the local repo should be listed as, defaults to 'repo' if blank
+export ZAI_AUR_LOCALREPO_NAME='' # WIP
+
+# The path to the local repo, specifically where it is located in the filesystem
+# If blank it defaults to '/repo'
+export ZAI_AUR_LOCALREPO_PATH='' # WIP
 
 #############################################
 ## Kernel Settings ##########################
@@ -127,16 +170,6 @@ export ZAI_SYS_MASK=( 'getty@tty2' )
 
 # Should we enable multilib support in pacman
 export ZAI_PKG_MULTILIB='true'
-
-# Should we use a local repo instead of trying to build packages locally
-export ZAI_PKG_LOCALREPO='true'
-
-# The name the local repo should be listed as, defaults to 'repo' if blank
-export ZAI_PKG_LOCALREPO_NAME='' # WIP
-
-# The path to the local repo, specifically where it is located in the filesystem
-# If blank it defaults to '/repo'
-export ZAI_PKG_LOCALREPO_PATH='' # WIP
 
 # The amount of parallel downloads which should be used
 export ZAI_PKG_PD='16'
