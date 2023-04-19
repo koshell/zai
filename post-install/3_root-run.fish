@@ -2,8 +2,16 @@
 
 set _name ( path change-extension '' ( basename ( status filename )))
 
+set -x ZAI_DIR '/zai'
+
+# Load config values
+source "$ZAI_DIR/post-install-env"
+
+# Load helper functions
+source "$ZAI_DIR/source/functions.fish"
+
 # Load colour and format variables
-source "/zai/source/format.fish"
+source "$ZAI_DIR/source/format.fish"
 
 set primary_user "zaiju"
 set ZAI_USERS $primary_user # 'second_user' 'sudo_user'
@@ -12,7 +20,6 @@ set ZAI_BACKUP '/zai/backups'
 
 set _user_groups psd libvirt steam download
 set _sudo_groups sudo audit hydrus
-
 
 txt_major "Formatting 'luks-home'..."
 mkdir -p "/{$ZAILOG}/bcachefs"
@@ -35,11 +42,11 @@ chattr -v +i /home
 
 txt_major "Mounting 'luks-home' on '/home'..."
 if not mount.bcachefs /dev/mapper/luks-home /home -o discard
-	txt_major "{$txtred}{$txtbold}Failed to mount '/home'{$txtclean}"
-	echo "    Check 'dmesg' for what errors were raised."
-	echo "    The errors are rarely propogated to userspace."
-	echo -e "$major Aborting to avoid read/write issues..."
-	return 1
+	err_major "Failed to mount '/home'"
+	err_base "    Check 'dmesg' for what errors were raised."
+	err_base "    The errors are rarely propogated to userspace."
+	err_minor "Aborting to avoid read/write issues..."
+	exit 1
 end
 txt_major "Succesfully mounted '/home'"
 
@@ -86,11 +93,11 @@ end
 echo "Set the password for '$primary_user':"
 passwd $primary_user
 
-echo "Moving various backup files to '/root'..."
+# Needs to check if we have a set backups and logs folder first
+echo "Moving backup files to '/root'..."
 
 mkdir -pv /root/zai/backups
 
-mkdir -v /
 mv /etc/locale.gen.bak /root/zai/backups/etc/locale.gen
 
 echo "Finished post install steps, don't forget to copy config files over before logging in as '$_user'!"
