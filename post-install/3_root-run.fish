@@ -13,91 +13,119 @@ source "$ZAI_DIR/source/functions.fish"
 # Load colour and format variables
 source "$ZAI_DIR/source/format.fish"
 
-set primary_user "zaiju"
-set ZAI_USERS $primary_user # 'second_user' 'sudo_user'
-set ZAI_SUDOS $primary_user # 'sudo_user'
-set ZAI_BACKUP '/zai/backups'
-
-set _user_groups psd libvirt steam download
-set _sudo_groups sudo audit hydrus
+reset_dirs
 
 txt_major "Formatting 'luks-home'..."
-mkdir -p "/{$ZAILOG}/bcachefs"
-bcachefs format \
-	--discard \
-	--label=home \
-	--background_compression=lz4 \
-	/dev/mapper/luks-home \
-	&> "/{$ZAILOG}/bcachefs/home-format.log"
+zai_verbose "$( \
+	bcachefs format \
+		--discard \
+		--label=home \
+		--background_compression=lz4 \
+		/dev/mapper/luks-home )"
 
 txt_minor "Removing the '/home' directory..."
-rm -rfv /home
-
+zai_verbose "$( rm -rfv /home )"
 
 txt_minor "Recreating '/home' and setting the 'i' flag..."
 # This prevents the system from creating files in /home
 # if there is every an issue with mounting the partition.
-mkdir -v /home
-chattr -v +i /home
+zai_verbose "$( mkdir -v /home )"
+zai_verbose "$( chattr -v +i /home )"
 
 txt_major "Mounting 'luks-home' on '/home'..."
-if not mount.bcachefs /dev/mapper/luks-home /home -o discard
+if not zai_verbose "$( mount.bcachefs -v /dev/mapper/luks-home /home -o discard )"
 	err_major "Failed to mount '/home'"
 	err_base "    Check 'dmesg' for what errors were raised."
 	err_base "    The errors are rarely propogated to userspace."
 	err_minor "Aborting to avoid read/write issues..."
 	exit 1
 end
-txt_major "Succesfully mounted '/home'"
+txt_minor "Succesfully mounted '/home'"
+ver_base "Backing up original '/etc/fstab'..."
+zai_verbose "$( mkdir -pv  )"
+zai_verbose "$( cp -fv /etc/fstab "$_backup_dir/etc/fstab" )"
+txt_major "Updating '/etc/fstab'..."
+set -l _fstab_string ( string join ' ' \
+	"UUID=$( string trim $( blkid -s UUID -o value /dev/mapper/luks-home ) )" \
+	'/home' \
+	'bcachefs'	\
+	'defaults,relatime' \
+	'0' \
+	'2' )
+echo -e "\n# /dev/mapper/luks-home"	| tee -a '/etc/fstab' >> (_log)
+echo "$_fstab_string"				| tee -a '/etc/fstab' >> (_log)
 
-# Add /home mount to fstab
+pretty_diff "$_backup_dir/etc/fstab" "/etc/fstab"
+
+# The following involves us building a regex with the sudo groups and trying
+# to inverse match it against the user groups. The goal is to potentially
+# catch and fix any issues of a sudo only group accidentally being assigned
+# to normal users
+ver_minor "Doing some sanity checking of the user groups to be added..."
+
+# Building list of sudo groups
+set sudo_groups ''
+if not string match -rqi '^true$' $ZAI_SUDO_DISABLE_WHEEL 
+	set -a sudo_groups 'wheel'
+end
+if test -n $ZAI_SUDO_ADD_GROUP
+	set -a sudo_groups "$( string lower $( string trim $ZAI_SUDO_ADD_GROUP ))"
+end
+for _group in $ZAI_USERS_GROUPS_SUDOS
+	set -a sudo_groups "$( string lower $( string trim $_group ))"
+end
+
+# Format the regex expression 
+set sudo_regex "($( string join ')|(' $_sudo_group_regex ))"
+
+set sanitised_groups ''
+for group in $ZAI_USERS_GROUPS 
+	if echo $group | grep -iqvwE "$sudo_regex"
+		set -a sanitised_groups "$group"
+	else
+		err_minor "The group '$group' appears to be assigned to super users AND normal users"
+		err_base "That could be a dangerous mistake to overlook so we will not assign it to normal users"
+	end
+end
 
 txt_major "Creating normal user groups..."
-for _group in $_user_groups
-	txt_minor "Creating group '$_group'"
-	groupadd $_group &> /dev/null
+for group in $sanitised_groups
+	txt_minor "Creating group '$group'"
+	zai_verbose "$( groupadd -f $group 2>> $(_err) )"
 end
 
-txt_major "Creating sudo user groups..."
-for _group in $_sudo_groups
-	txt_minor "Creating group '$_group'"
-	groupadd $_group &> /dev/null
+txt_major "Creating super user groups..."
+for group in $sudo_groups
+	txt_minor "Creating group '$group'"
+	zai_verbose "$( groupadd -f $group 2>> $(_err) )" 
 end
 
-txt_major "Creating user accounts..."
-for _user in $ZAI_USERS
-	txt_minor "Creating user '$_user'..."
-	useradd -mU $_user
+txt_major "Creating human user accounts..."
+for user in $ZAI_USERS
+	txt_minor "Creating user '$user'..."
+	zai_verbose "$( useradd --create-home --user-group $user 2>> $(_err) )"
 end
 
-txt_major "Adding secondary groups to normal users..."
-for _user in $ZAI_USERS
-	txt_minor "Ading groups to $_user..."
-	for _group in $_user_groups
-    	groupadd $_group &> /dev/null
-		echo "    Appending group '$_group'"
-    	usermod --append -G $_group $_user
+txt_major "Adding secondary groups to users..."
+for user in $ZAI_USERS
+	txt_minor "Adding groups to '$user'..."
+	for group in $sanitised_groups
+		ver_base "Appending group '$group' to '$user'..."
+    	zai_verbose "$( usermod -aG $group $user 2>> $(_err) )" 
 	end
 end
 
 txt_major "Adding secondary groups to super users..."
-for _user in $ZAI_SUDOS
-	txt_minor "Ading groups to $_user..."
-	for _group in $_sudo_groups
-    	groupadd $_group &> /dev/null
-		echo "    Appending group '$_group'"
-    	usermod --append -G $_group $_user
+for user in $ZAI_SUDOS
+	txt_minor "Adding groups to '$user'..."
+	for group in $sudo_groups
+		ver_base "Appending group '$group' to '$user'..."
+    	zai_verbose "$( usermod -aG $group $user 2>> $(_err) )" 
 	end
 end
 
-echo "Set the password for '$primary_user':"
-passwd $primary_user
+txt_major "Set the password for '$ZAI_USERS_ADMIN'"
+passwd $ZAI_USERS_ADMIN
 
-# Needs to check if we have a set backups and logs folder first
-echo "Moving backup files to '/root'..."
-
-mkdir -pv /root/zai/backups
-
-mv /etc/locale.gen.bak /root/zai/backups/etc/locale.gen
-
-echo "Finished post install steps, don't forget to copy config files over before logging in as '$_user'!"
+txt_major "Finished post-install steps!"
+ver_minor "Don't forget to copy any config files you want into your \$HOME before logging in as '$ZAI_USERS_ADMIN'"
