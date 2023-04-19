@@ -95,9 +95,9 @@ function replace_line {
 function zai_verbose {
 	_return_code="$?"
 	if [[ ${ZAI_VERBOSE,,} =~ ^true$ ]]; then
-		printf '%s' "$1" | tee -a "$(_log)"
+		printf '%s' "$1\n" | tee -a "$(_log)"
 	else
-		printf '%s' "$1" >> "$(_log)"
+		printf '%s' "$1\n" >> "$(_log)"
 	fi
 	return $_return_code
 }

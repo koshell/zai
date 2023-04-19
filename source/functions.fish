@@ -82,9 +82,9 @@ end
 function zai_verbose
 	set -f _return_code "$status"
 	if string match -rqi '^true$' "$ZAI_VERBOSE"
-		printf '%s' "$argv[1]" | tee -a (_log)
+		printf '%s' "$argv[1]\n" | tee -a (_log)
 	else
-		printf '%s' "$argv[1]" >> (_log)
+		printf '%s' "$argv[1]\n" >> (_log)
 	end
 	return $_return_code
 end
