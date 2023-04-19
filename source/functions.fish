@@ -38,7 +38,7 @@ function replace_line
     
 	# Make variable usage a bit clearer
 	set _search 	$argv[1]
-	set _replace $argv[2]
+	set _replace 	$argv[2]
 	set _file 	$argv[3]
 	
 	# Actually run 'sed'
@@ -74,17 +74,17 @@ end
 # Diffs two files and outputs with bat
 function pretty_diff 
 	diff -u "$argv[1]" "$argv[2]" --minimal | \
-	tee -a "$(_log)" | \
+	tee -a (_log) | \
 	bat --language diff --paging never --file-name "$argv[1] -> $argv[2]" -
 	return
 end
 
 function zai_verbose
 	set -f _return_code "$status"
-	if string match -rqi '^true$' $ZAI_VERBOSE
-		printf '%s' "$argv[1]" | tee -a "$(_log)"
+	if string match -rqi '^true$' "$ZAI_VERBOSE"
+		printf '%s' "$argv[1]" | tee -a (_log)
 	else
-		printf '%s' "$argv[1]" >> "$(_log)"
+		printf '%s' "$argv[1]" >> (_log)
 	end
 	return $_return_code
 end
