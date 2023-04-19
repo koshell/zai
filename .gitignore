@@ -2,4 +2,4 @@
 /pkglist/pkgopts.list
 /pkglist/aurlist.list
 /pkglist/auropts.list
-/logs/**
+/logs/**/zai_test.bash
