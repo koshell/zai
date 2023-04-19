@@ -107,7 +107,9 @@ function zai_verbose {
 
 function reset_dirs {
 	_log_dir="$(_log_dir)"
+	mkdir -p $_log_dir
 	_backup_dir="$(_backup_dir)"
+	mkdir -p $_backup_dir
 	return
 }
 
