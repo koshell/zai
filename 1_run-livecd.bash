@@ -35,7 +35,15 @@ if [[ ! $ZAI_DIR == '/zai' ]]; then
 
 	txt_major "Copying scripts to '/zai'..."
 	zai_verbose "$( rm -rfv /zai 2>> "$(_err)" )"
-	if zai_verbose "$( cp -avr "${ZAI_DIR}/*" '/zai' 2>> "$(_err)" )"; then
+	mapfile -t file_list <<< "$(find "$ZAI_DIR" -mindepth 1 -maxdepth 1)"
+	zai_verbose "$(	mkdir -pv /zai 2>> "$(_err)" )"
+	cp_status=0
+	for file in "${file_list[@]}"; do
+		if basename "$file" | grep -qvEe '^\.'; then
+			zai_verbose "$( cp -avr "$file" '/zai/' 2>> "$(_err)"; cp_status=$(( $cp_status + $? )) )";
+		fi
+	done
+	if [[ $cp_status -eq 0 ]]; then
 		export ZAI_DIR='/zai'
 		txt_major "Passing execution into '/zai'..."
 		# shellcheck disable=SC2093
