@@ -73,22 +73,56 @@ export ZAI_LAZYSED='false'
 export ZAI_USERS=( 'zaiju' ) #WIP
 
 # List of users that should be given sudo powers
+#
+# This should be a subset of $ZAI_USERS since
+# it only affects the groups added and dosen't
+# create any further accounts
 export ZAI_USERS_SUDOS=( 'zaiju' ) #WIP
 
+# The user which will have their password set as part of the
+# setup and installation process, other users will need to have
+# their password updated manually
+#
+export ZAI_USERS_ADMIN='zaiju'
+
+# List of system users that should be created
+# 
+# System users are not added to any secondary groups
+# so you may need to add them to various groups to
+# achieve their purpose
+#
+# Supports adding a comment during user
+# creation with the use of ':'
+#
+# For example if you had:
+# 	export ZAI_USERS_SYSTEM=( 'rsync:rsync deamon' )	
+#
+# That would be created with the following options:
+# 	--shell '/usr/bin/nologin'
+# 	--no-create-home
+# 	--system
+# 	--user-group
+# 	--home-dir '/'
+# 	--comment "rsync deamon"
+#
+# The comment portion is skipped if there is no ':'
+#
+export ZAI_USERS_SYSTEM=( 'zaiju' ) #WIP
+
 # List of groups all users should get
-export ZAI_USERS_GROUPS=( 'steam' ) #WIP
+export ZAI_USERS_GROUPS=( 'steam' 'psd' 'download' ) #WIP
 
 # List of groups only sudos should get
 #
 # Of note, you do not need to specifc the sudoers group (wheel, sudos) 
 # in this list, it will be automatically resolved
 #
-export ZAI_USERS_GROUPS_SUDOS=( 'libvirt' ) #WIP
+export ZAI_USERS_GROUPS_SUDOS=( 'libvirt' 'audit' 'hydrus' 'lanraragi' ) #WIP
 
 #############################################
 ## Sudoers Settings #########################
 
-# Disable the root powers of the 'wheel' group
+# Remove the 'wheel' group from the sudoers file
 export ZAI_SUDO_DISABLE_WHEEL='true' # WIP
 
 # If not blank a new group is created that is functionally
