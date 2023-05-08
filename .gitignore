@@ -3,4 +3,4 @@
 /pkglist/aurlist.list
 /pkglist/auropts.list
 /logs/**
-/zai_test.bash
+/zai_test.fish

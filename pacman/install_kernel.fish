@@ -15,7 +15,7 @@ source "$ZAI_DIR/source/functions.fish"
 # 	"Names are not allowed to start with hyphens or dots." 
 # 	"All letters should be lowercase."
 # 
-set _valid_package_name (string join '' \
+set _valid_package_name "$(string join '' \
 	's/' 					 	 \
 		'[[:blank:]]*' 			 \
 		'(\(' 				     \
@@ -26,74 +26,94 @@ set _valid_package_name (string join '' \
 			'\+' 			'\|' \
 			'-' 			     \
 		'\)*)'					 \
-	'.*/\1/g')
+	'.*/\1/g')"
 
 # Strips trailing and leading whitespace and other invalid characters
-set --append pkglist ( echo "$ZAI_KERNEL" | sed "$_valid_package_name" )
+set --append pkglist "$( echo "$ZAI_KERNEL" | sed "$_valid_package_name" )"
 
 # This function cleans up loose files that might 
 # be created as part of the build process
 function clean_tmp
 	txt_base "Cleaning up loose build files..."
 	for _path in ( find /tmp/makepkg -mindepth 1 -maxdepth 1 )
-		if test -n $_path
-			rm -rfv $_path 2>> "$(_err)" | tee -a "$(_log)" 
+		if test -n "$_path"
+			rm -rfv "$_path" 2>> "$(_err)" | tee -a "$(_log)" 
 		end
 	end
 	for _path in ( find /aur/tmp -mindepth 1 -maxdepth 1 )
-		if test -n $_path
-			rm -rfv $_path 2>> "$(_err)" | tee -a "$(_log)" 
+		if test -n "$_path"
+			rm -rfv "$_path" 2>> "$(_err)" | tee -a "$(_log)" 
 		end
 	end
 	for _path in ( find /tmp -mindepth 1 -maxdepth 1 | \
 			grep -E '(^/tmp/cargo-install)|(^/tmp/rustc)|(^/tmp/yarn)' )
 		
-		rm -rfv $_path 2>> "$(_err)" | tee -a "$(_log)" 
+		rm -rfv "$_path" 2>> "$(_err)" | tee -a "$(_log)" 
 	end
 end
 
 if string match -rqi '^true$' "$ZAI_KERNEL_HEADERS_INSTALL"
-	set --append pkglist ( echo "$ZAI_KERNEL_HEADERS" | sed "$_valid_package_name" )
+	set --append pkglist "$( echo "$ZAI_KERNEL_HEADERS" | sed "$_valid_package_name" )"
 end
 
 if string match -rqi '^true$' "$ZAI_KERNEL_DOCS_INSTALL"
-	set --append pkglist ( echo "$ZAI_KERNEL_DOCS" | sed "$_valid_package_name" )
+	set --append pkglist "$( echo "$ZAI_KERNEL_DOCS" | sed "$_valid_package_name" )"
 end
 
-set _paru ''
 if pacman -Qq paru &> /dev/null
 	set _paru 'true'
 end
 
-if string match -rqi '^true$' $ZAI_AUR_PARU; and string match -rqi '^true$' $_paru
+ver_major "The kernel packages which will be install are:"
+for i in $pkglist
+	ver_minor "Package: $i"
+end
+
+ver_major "\$ZAI_KERNEL = '$ZAI_KERNEL'"
+ver_major "\$ZAI_KERNEL_DOCS = '$ZAI_KERNEL_DOCS'"
+ver_major "\$ZAI_KERNEL_HEADERS = '$ZAI_KERNEL_HEADERS'"
+
+if string match -rqi '^true$' "$ZAI_AUR_PARU"; and string match -rqi '^true$' "$_paru"
 	txt_major "Installing kernel..."
 
 	txt_minor 'Attempting to install kernel packages in bulk...'
-	if paru -S \
+	if zai_log "$(			\
+		paru -S 			\
 			--needed 		\
 			--skipreview 	\
 			--nokeepsrc 	\
 			--cleanafter 	\
 			--removemake 	\
 			--noconfirm 	\
-			--color always $pkglist 2>> "$(_err)" | tee -a "$(_log)" 
+			--failfast		\
+			--color always	\ 
+			"$pkglist" 		\
+			2>> "$(_err)" 	\
+	)"
 		txt_base 'Bulk install was successful'
 	else
 		err_minor 'Bulk kernel install failed, starting individual kernel package installation...'
 		for i in $pkglist
-			echo '========================================================================' | tee -a "$(_log)"
-			txt_minor "Attempting to install '$i'..."
-			if paru -S \
-					--needed 		\
-					--skipreview 	\
-					--nokeepsrc 	\
-					--cleanafter 	\
-					--removemake 	\
-					--noconfirm 	\
-					--color always $i 2>> "$(_err)" | tee -a "$(_log)" 
-				ver_base "Successfully installed '$i'"
-			else
-				err_base "Failed to install '$i'"
+			if not pacman Qq "$i" &> /dev/null
+				echo '========================================================================' | tee -a "$(_log)"
+				txt_minor "Attempting to install '$i'..."
+				if zai_log "$( 			\
+					paru -S 			\
+						--needed 		\
+						--skipreview 	\
+						--nokeepsrc 	\
+						--cleanafter 	\
+						--removemake 	\
+						--noconfirm 	\
+						--failfast		\
+						--color always 	\ 
+						"$i" 			\
+						2>> "$(_err)"	\
+				)"
+					ver_base "Successfully installed '$i'"
+				else
+					err_base "Failed to install '$i'"
+				end
 			end
 		end
 		echo '========================================================================' | tee -a "$(_log)"
@@ -102,40 +122,42 @@ else
 	txt_major "Installing kernel..."
 
 	txt_minor 'Attempting to install kernel packages in bulk...'
-	if pacman -S --noconfirm --needed --color always $pkglist 2>> "$(_err)" | tee -a "$(_log)" 
+	if zai_log "$( pacman -S --noconfirm --needed --color always "$pkglist" 2>> "$(_err)" )" 
 		txt_base 'Bulk install was successful'
 	else
 		err_minor 'Bulk install failed, starting individual kernel package installation...'
 		for i in $pkglist
-			echo '========================================================================' | tee -a "$(_log)"
-			txt_minor "Attempting to install '$i'..."
-			if pacman -S --noconfirm --needed --color always $i 2>> "$(_err)" | tee -a "$(_log)" 
-				ver_base "Successfully installed '$i'"
-			else
-				err_base "Failed to install '$i'"
+			if not pacman Qq "$i" &> /dev/null			
+				echo '========================================================================' | tee -a "$(_log)"
+				txt_minor "Attempting to install '$i'..."
+				if zai_log "$( pacman -S --noconfirm --needed --color always "$i" 2>> "$(_err)" )" 
+					ver_base "Successfully installed '$i'"
+				else
+					err_base "Failed to install '$i'"
+				end
 			end
 		end
 		echo '========================================================================' | tee -a "$(_log)"
 	end
 end
 
-set pkglist ''
+set --erase pkglist
 
-if not pacman -Qq ( echo "$ZAI_KERNEL" | sed "$_valid_package_name" ) &> /dev/null
-	set --append pkglist ( echo "$ZAI_KERNEL" | sed "$_valid_package_name" )
+if not pacman -Qq "$( echo "$ZAI_KERNEL" | sed "$_valid_package_name" )" &> /dev/null
+	set --append pkglist "$( echo "$ZAI_KERNEL" | sed "$_valid_package_name" )"
 end
 
-if string match -rqi '^true$' "$ZAI_KERNEL_HEADERS_INSTALL"; and not pacman -Qq ( echo "$ZAI_KERNEL_HEADERS" | sed "$_valid_package_name" ) &> /dev/null
-	set --append pkglist ( echo "$ZAI_KERNEL_HEADERS" | sed "$_valid_package_name" )
+if string match -rqi '^true$' "$ZAI_KERNEL_HEADERS_INSTALL"; and not pacman -Qq "$( echo "$ZAI_KERNEL_HEADERS" | sed "$_valid_package_name" )" &> /dev/null
+	set --append pkglist "$( echo "$ZAI_KERNEL_HEADERS" | sed "$_valid_package_name" )"
 end
 
-if string match -rqi '^true$' "$ZAI_KERNEL_DOCS_INSTALL"; and not pacman -Qq ( echo "$ZAI_KERNEL_DOCS" | sed "$_valid_package_name" ) &> /dev/null
-	set --append pkglist ( echo "$ZAI_KERNEL_DOCS" | sed "$_valid_package_name" )
+if string match -rqi '^true$' "$ZAI_KERNEL_DOCS_INSTALL"; and not pacman -Qq "$( echo "$ZAI_KERNEL_DOCS" | sed "$_valid_package_name" )" &> /dev/null
+	set --append pkglist "$( echo "$ZAI_KERNEL_DOCS" | sed "$_valid_package_name" )"
 end
 
 # Possible that a kernel from the AUR was set in the config but 
 # 'paru' wasn't installed therefore we need to build the kernel manually
-if string match -rqvi '^true$' $_paru; and test -n $pkglist
+if string match -rqvi '^true$' "$_paru"; and test -n "$pkglist"
 	txt_major "Assuming kernel is a AUR package..."
 	txt_minor "Attempting to collect AUR 'PKGBUILD' files..."
 	for i in $pkglist
@@ -161,29 +183,29 @@ if string match -rqvi '^true$' $_paru; and test -n $pkglist
 
 	# Crease list of folders in /aur/pkgbuild
 	for bdir in (find /aur/pkgbuild -maxdepth 1 -mindepth 1 -type d)
-		if path basename $bdir | grep -vqE '^\.'
-			set -a -g build_dirs $bdir
+		if path basename "$bdir" | grep -vqE '^\.'
+			set -a -g build_dirs "$bdir"
 		end
 	end
 
 	txt_major 'Beginning kernel compilation and installation...'
 	for _pkg_path in $build_dirs
 		clean_tmp
-		set _pkg (path basename $_pkg_path)
+		set _pkg (path basename "$_pkg_path")
 		txt_major "Attempting to build and install '$_pkg'..."
 		if su -c "cd $_pkg_path; makepkg -sic \
-				--needed \
-				--noconfirm \
-				--color always" aur 2>> "$(_err)" | tee -a "$(_log)"
+					--needed \
+					--noconfirm \
+					--color always" aur 2>> "$(_err)" | tee -a "$(_log)"
 			txt_base "Successfully built and installed '$_pkg'"
 		else
 			clean_tmp
 			err_base "Failed to build or install '$_pkg' inside of '/tmp'"
 			txt_minor "Attempting build and install outside of '/tmp'..."
 			if su -c "cd $_pkg_path; BUILDDIR='/aur/tmp' makepkg -sic \
-					--needed \
-					--noconfirm \
-					--color always" aur 2>> "$(_err)" | tee -a "$(_log)"
+						--needed \
+						--noconfirm \
+						--color always" aur 2>> "$(_err)" | tee -a "$(_log)"
 				txt_base "Successfully built and installed '$_pkg'"
 			else
 				clean_tmp
@@ -199,25 +221,25 @@ if string match -rqvi '^true$' $_paru; and test -n $pkglist
 
 	set failed_packages ''
 
-	if not pacman -Qq ( echo "$ZAI_KERNEL" | sed "$_valid_package_name" ) &> /dev/null
-		set --append failed_packages ( echo "$ZAI_KERNEL" | sed "$_valid_package_name" )
+	if not pacman -Qq "$( echo "$ZAI_KERNEL" | sed "$_valid_package_name" )" &> /dev/null
+		set --append failed_packages "$( echo "$ZAI_KERNEL" | sed "$_valid_package_name" )"
 	end
 	
-	if string match -rqi '^true$' "$ZAI_KERNEL_HEADERS_INSTALL"; and not pacman -Qq ( echo "$ZAI_KERNEL_HEADERS" | sed "$_valid_package_name" ) &> /dev/null
-		set --append failed_packages ( echo "$ZAI_KERNEL_HEADERS" | sed "$_valid_package_name" )
+	if string match -rqi '^true$' "$ZAI_KERNEL_HEADERS_INSTALL"; and not pacman -Qq "$( echo "$ZAI_KERNEL_HEADERS" | sed "$_valid_package_name" )" &> /dev/null
+		set --append failed_packages "$( echo "$ZAI_KERNEL_HEADERS" | sed "$_valid_package_name" )"
 	end
 	
-	if string match -rqi '^true$' "$ZAI_KERNEL_DOCS_INSTALL"; and not pacman -Qq ( echo "$ZAI_KERNEL_DOCS" | sed "$_valid_package_name" ) &> /dev/null
-		set --append failed_packages ( echo "$ZAI_KERNEL_DOCS" | sed "$_valid_package_name" )
+	if string match -rqi '^true$' "$ZAI_KERNEL_DOCS_INSTALL"; and not pacman -Qq "$( echo "$ZAI_KERNEL_DOCS" | sed "$_valid_package_name" )" &> /dev/null
+		set --append failed_packages "$( echo "$ZAI_KERNEL_DOCS" | sed "$_valid_package_name" )"
 	end
 
-	if test -n $failed_packages
+	if test -n "$failed_packages"
 		for i in $failed_packages
 			err_major "Failed to install $i"
 		end
 		abort
 	end
-else if test -n $pkglist
+else if test -n "$pkglist"
 	for i in $pkglist
 		err_major "Failed to install $i"
 	end

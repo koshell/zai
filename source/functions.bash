@@ -91,16 +91,39 @@ function replace_line {
 	return "$?"
 }
 
-# Wraps command output and hides it if not verbose
-function zai_verbose {
+function zai_log {
 	_return_code="$?"
-	if [[ ${ZAI_VERBOSE,,} =~ ^true$ ]]; then
+	if printf '%s' "$1" | grep -zEvq -e '^[[:blank:]]*$'; then 
 		printf '%s\n' "$1" | tee -a "$(_log)"
-	else
-		printf '%s\n' "$1" >> "$(_log)"
 	fi
 	return $_return_code
 }
+
+# Wraps command output and hides it if not verbose
+function zai_verbose {
+	_return_code="$?"
+	if printf '%s' "$1" | grep -zEvq -e '^[[:blank:]]*$'; then 
+		if [[ ${ZAI_VERBOSE_VERY,,} =~ ^true$ ]] || [[ ${ZAI_VERBOSE,,} =~ ^true$ ]]; then
+			printf '%s\n' "$1" | tee -a "$(_log)"
+		else
+			printf '%s\n' "$1" >> "$(_log)"
+		fi
+	fi
+	return $_return_code
+}
+
+function zai_vverbose {
+	_return_code="$?"
+	if printf '%s' "$1" | grep -zEvq -e '^[[:blank:]]*$'; then 
+		if [[ ${ZAI_VERBOSE_VERY,,} =~ ^true$ ]]; then
+			printf '%s\n' "$1" | tee -a "$(_log)"
+		else
+			printf '%s\n' "$1" >> "$(_log)"
+		fi
+	fi
+	return $_return_code
+}
+
 
 ######################################################	
 ###### Set directories to store transient files ######

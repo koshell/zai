@@ -9,15 +9,15 @@ function replace_line
 	############################################################	
 	####### Check for, and protect against, unsafe usage #######
 	
-	if test -z $argv[1]
+	if test -z "$argv[1]"
 		# Search string is undefined or empty, feeding this
 		# to 'sed' would be bad so we abort instead
 		echo "{$txtred}Search string passed to 'replace_line' function empty or undefined{$txtclean}" >&2
 		echo "{$txtred}\$1 = '$argv[1]'{$txtclean}" >&2
 		return 1
-	
-	else if test -z $argv[2]
-		if string match -rqiv '^true$' $ZAI_LAZYSED # Inverted with '-v'
+	end
+	if test -z "$argv[2]"
+		if string match -rqiv '^true$' "$ZAI_LAZYSED" 
 			# Replacment string is undefined or empty, this ~might~ be intentional
 			# but could be extremely destructive if it is a bug so we abort unless
 			# explicitly told to allow this usage with $ZAI_LAZYSED
@@ -25,8 +25,8 @@ function replace_line
 			echo "{$txtred}\$2 = '$argv[2]'{$txtclean}" >&2
 			return 1
 		end
-
-	else if test -z $argv[3]
+	end
+	if test -z "$argv[3]"
 		# Search file is undefined or empty, feeding this 
 		# to 'sed' would be bad so we abort instead
 		echo "{$txtred}File path passed to 'replace_line' function empty or undefined{$txtclean}" >&2
@@ -79,12 +79,46 @@ function pretty_diff
 	return
 end
 
+function zai_log
+	set -f _return_code "$status"
+	if printf '%s' "$argv[1]" | grep -zEvq -e '^[[:blank:]]*$' 
+		printf '%s\n' "$argv[1]" | tee -a "$(_log)"
+	end
+	return $_return_code
+end
+
 function zai_verbose
 	set -f _return_code "$status"
-	if string match -rqi '^true$' "$ZAI_VERBOSE"
-		printf '%s\n' "$argv[1]" | tee -a (_log)
-	else
-		printf '%s\n' "$argv[1]" >> (_log)
+	if printf '%s' "$argv[1]" | grep -zEvq -e '^[[:blank:]]*$' 
+		if string match -rqi '^true$' "$ZAI_VERBOSE_VERY"; or string match -rqi '^true$' "$ZAI_VERBOSE"
+			printf '%s\n' "$argv[1]" | tee -a "$(_log)"
+		else
+			printf '%s\n' "$argv[1]" >> "$(_log)"
+		end
+	end
+	return $_return_code
+end
+
+function zai_verbose
+	set -f _return_code "$status"
+	if printf '%s' "$argv[1]" | grep -zEvq -e '^[[:blank:]]*$' 
+		if string match -rqi '^true$' "$ZAI_VERBOSE_VERY"; or string match -rqi '^true$' "$ZAI_VERBOSE"
+			printf '%s\n' "$argv[1]" | tee -a "$(_log)"
+		else
+			printf '%s\n' "$argv[1]" >> "$(_log)"
+		end
+	end
+	return $_return_code
+end
+
+function zai_vverbose
+	set -f _return_code "$status"
+	if printf '%s' "$argv[1]" | grep -zEvq -e '^[[:blank:]]*$'
+		if string match -rqi '^true$' "$ZAI_VERBOSE_VERY"
+			printf '%s\n' "$argv[1]" | tee -a (_log)
+		else
+			printf '%s\n' "$argv[1]" >> (_log)
+		end
 	end
 	return $_return_code
 end

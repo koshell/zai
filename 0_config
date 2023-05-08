@@ -61,6 +61,18 @@ export ZAI_IGNOREFAIL='false'
 # other measures that would simplify the debug process inside a VM
 export ZAI_VMDEGUB='true'
 
+#############################################
+## REGEX Settings ###########################
+
+# This control if we should reget package names from the list
+# that don't match the offical arch naming convetion:
+# 	https://wiki.archlinux.org/title/Arch_package_guidelines#Package_naming
+#
+# If 'true' bad names are removed from the pkglist when processed, if 'false'
+# we assume that a valid name is a substring of the name given and try to 
+# extract it with relaxed rules
+export ZAI_REX_STRICTPKG='true'
+
 # Allow some lazy uses of 'sed' which could potentially be destructive
 # it is disabled by default to prevent unintended behaviour but can be
 # turned on with this toggle if some edge case is causing issues
@@ -175,7 +187,8 @@ export ZAI_AUR_LOCALREPO_PATH='' # WIP
 # one here and the rest in the relevant 'pkglist.list'
 #
 # Eg: export ZAI_KERNEL='linux'
-export ZAI_KERNEL='linux-pure-bcachefs-git'
+export ZAI_KERNEL='linux'
+#export ZAI_KERNEL='linux-pure-bcachefs-git'
 
 # Name of the kernels '-docs' package
 # and if it should be installed
@@ -184,7 +197,8 @@ export ZAI_KERNEL_DOCS_INSTALL='false'
 
 # Name of the kernels '-headers' package
 # and if it should be installed
-export ZAI_KERNEL_HEADERS='linux-pure-bcachefs-git-headers'
+export ZAI_KERNEL_HEADERS='linux-headers'
+#export ZAI_KERNEL_HEADERS='linux-pure-bcachefs-git-headers'
 export ZAI_KERNEL_HEADERS_INSTALL='true'
 
 #############################################
@@ -201,6 +215,8 @@ export ZAI_SYS_MASK=( 'getty@tty2' )
 
 #############################################
 ## Pacman Settings ##########################
+
+export ZAI_PKG_STRICT_NAMEING='true'
 
 # Should we enable multilib support in pacman
 export ZAI_PKG_MULTILIB='true'

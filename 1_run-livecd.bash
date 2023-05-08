@@ -29,7 +29,7 @@ reset_dirs
 if [[ ! $ZAI_DIR == '/zai' ]]; then
 	clear
 
-	_txtclean; 			echo -n "Starting " | tee -a "$(_log)"
+	_txtclean; 			echo -en "\nStarting " | tee -a "$(_log)"
 	_txtbold; _txtgrn; 	echo "Zaiju's Arch Installer" | tee -a "$(_log)"
 	_txtclean; 			echo -e "Version: ${__version__}\n" | tee -a "$(_log)"
 
