@@ -19,19 +19,13 @@ readonly _swap_uuid="$(blkid -s UUID -o value "$_swap")"
 
 txt_major "Installing 'limine' bootloader..."
 
-txt_minor "Running 'limine-deploy'..."
-limine-deploy "/dev/$ZAI_BLK"
-
-txt_minor "Copying 'limine.sys'..."
-cp -v /usr/share/limine/limine.sys /boot/limine.sys
-
 txt_minor "Copying 'BOOTX64.EFI'..."
 mkdir -vp /boot/EFI/BOOT
 cp -v /usr/share/limine/BOOTX64.EFI /boot/EFI/BOOT/BOOTX64.EFI
 
 txt_minor "Copying pacman hook..."
 mkdir -vp /etc/pacman.d/hooks
-cp -v "$ZAI_DIR/limine/liminedeploy.hook" /etc/pacman.d/hooks/liminedeploy.hook
+cp -v "$ZAI_DIR/limine/limine-deploy.hook" /etc/pacman.d/hooks/limine-deploy.hook
 
 txt_minor "Copying 'limine.cfg'..."
 cp -v "$ZAI_DIR/limine/limine.cfg" /boot/limine.cfg
