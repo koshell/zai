@@ -1,0 +1,10 @@
+lib32-gst-plugins-base-libs
+lib32-ocl-icd
+lib32-v4l-utils
+npm
+opencl-headers
+pandoc-cli
+python-pip
+qt6-tools
+texlive-latexextra
+wireless-regdb
