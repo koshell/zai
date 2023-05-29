@@ -47,6 +47,10 @@ else:
 
 
 class Zaiju_Arch_Installer:
+    """
+    TODO
+    """
+
     def __init__(
         self,
         *,
@@ -75,8 +79,7 @@ class Zaiju_Arch_Installer:
             if isinstance(zai_home, Path):
                 self._zai_home = zai_home
                 return
-            else:
-                raise TypeError(f"Expected type 'Path', got type '{type(zai_home)}'")
+            raise TypeError(f"Expected type 'Path', got type '{type(zai_home)}'")
         elif "ZAI_HOME" in os.environ:
             self._zai_home = Path(os.environ["ZAI_HOME"])
             return
@@ -99,7 +102,6 @@ class Zaiju_Arch_Installer:
 
 
 if __name__ == "__main__":
-    """This is executed when run from the command line"""
     parser = argparse.ArgumentParser()
 
     # Required positional argument
