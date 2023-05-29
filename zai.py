@@ -38,16 +38,30 @@ if "ZAI_VM" in os.environ:
 else:
     VM: bool = False
 
+if "ZAI_STAGE" in os.environ:
+    ZAI_STAGE: int = int(os.environ["ZAI_STAGE"])
+else:
+    ZAI_STAGE: int = 1
+
 # endregion
 
 
 class Zaiju_Arch_Installer:
     def __init__(
         self,
-        *args,
+        *,
         zai_home: Optional[Path] = None,
     ):
         self.zai_home = zai_home
+
+    def stage_one():
+        pass
+
+    def stage_two():
+        pass
+
+    def stage_three():
+        pass
 
     # region zai_home
 
@@ -72,10 +86,16 @@ class Zaiju_Arch_Installer:
 
     # endregion
 
-    def main(args):
-        zai_1.main()
-        zai_2.main()
-        zai_3.main()
+    def main(self):
+        match ZAI_STAGE:
+            case 1:
+                self.stage_one()
+            case 2:
+                self.stage_two()
+            case 3:
+                self.stage_three()
+            case _:
+                raise Exception
 
 
 if __name__ == "__main__":
@@ -88,8 +108,12 @@ if __name__ == "__main__":
     # Optional argument flag which defaults to False
     parser.add_argument("-f", "--flag", action="store_true", default=False)
 
+    parser.add_argument(
+        "--stage", action="store_const", dest="stage", default=0, type=int, nargs=1
+    )
+
     # Optional argument which requires a parameter (eg. -d test)
-    parser.add_argument("-n", "--name", action="store", dest="name")
+    parser.add_argument("--home", action="store", dest="zai_name")
 
     # Optional verbosity counter (eg. -v, -vv, -vvv, etc.)
     parser.add_argument(
@@ -102,10 +126,15 @@ if __name__ == "__main__":
         action="version",
         version="%(prog)s (version {version})".format(version=__version__),
     )
+    kwargs = parser.parse_args()
 
-    args = parser.parse_args()
+    if kwargs["stage"] == 0:
+        if "ZAI_STAGE" in os.environ:
+            kwargs["stage"]: int = int(os.environ["ZAI_STAGE"])
+    else:
+        kwargs["stage"]: int = 1
 
-    global ZAI_DIR
-
-    main(args)
+    # endregion
+    zai = Zaiju_Arch_Installer(**parser.parse_args())
+    zai.main()
     exit()

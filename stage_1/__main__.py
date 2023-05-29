@@ -42,7 +42,7 @@ def main(*args, **kwargs):
     # Partitioning
     partition_table = Partition_Controller(
         device=config["partitioning"]["block_device"],
-        partitions=[1, 32, 64, 1],
+        partitions=[1, 32, 64],
         unit=GB,
     )
 
@@ -65,7 +65,8 @@ def main(*args, **kwargs):
     # ]
 
     # Encrypt partitions
-    crypt.main(partitions_to_encrypt, root_partition=Path("/", "dev", "nvme0n1" + "3"))
+    crypt.main(partitions_to_encrypt, root_partition=Path(
+        "/", "dev", "nvme0n1" + "3"))
 
     format_block.main()
 
@@ -84,7 +85,8 @@ def main(*args, **kwargs):
             "genfstab",
             "-U",
             "/mnt",
-        ]
+        ],
+        capture_output=True,
     )
 
     # Having a functioning tmpfs inside the new root will make compilation
@@ -99,10 +101,8 @@ def main(*args, **kwargs):
             "mount",
             "-v",
             "--mkdir",
-            "-t",
-            "tmpfs",
-            "-o",
-            "size=100%",
+            *["-t", "tmpfs"],
+            *["-o", "size=100%"],
             "tmpfs",
             "/mnt/tmp",
         ]
@@ -132,9 +132,7 @@ def main(*args, **kwargs):
     run(
         [
             "mount",
-            "-v",
-            "--mkdir",
-            "--bind",
+            *["-v", "--mkdir", "--bind"],
             *["/repo", "/mnt/repo"],
         ]
     )
@@ -159,12 +157,15 @@ if __name__ == "__main__":
 
     # Optional verbosity counter (eg. -v, -vv, -vvv, etc.)
     parser.add_argument(
-        "-v", "--verbose", action="count", default=0, help="Verbosity (-v, -vv, etc)"
+        "-v", "--verbose",
+        action="count",
+        default=0,
+        help="Verbosity (-v, -vv, etc)",
     )
 
     # Specify output of "--version"
     parser.add_argument(
-        "--version",
+        "-V", "--version",
         action="version",
         version="%(prog)s (version {version})".format(version=__version__),
     )

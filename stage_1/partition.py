@@ -40,7 +40,8 @@ class DataSize:
                 if size_mebibytes is None:
                     if size_gibibytes is None:
                         if size_tebibytes is None:
-                            raise ValueError("No size passed to DataSize class")
+                            raise ValueError(
+                                "No size passed to DataSize class")
                         else:
                             self.__size: int = int(size_tebibytes * TB)
                     else:
@@ -84,7 +85,8 @@ class Partition_Controller:
         unit: int = BYTE,
     ) -> None:
         if partition_table not in [GPT, MBR]:
-            raise ValueError(f"Expected '{GPT}' or '{MBR}' but got '{partition_table}'")
+            raise ValueError(
+                f"Expected '{GPT}' or '{MBR}' but got '{partition_table}'")
         self.partition_table: str = partition_table
 
         if not Path(device).exists():
@@ -92,10 +94,12 @@ class Partition_Controller:
 
         self.__device: str = str(Path(device).absolute())
 
-        cmd = run(["blockdev", "--getsize64", self.__device], capture_output=True)
+        cmd = run(["blockdev", "--getsize64", self.__device],
+                  capture_output=True)
         cmd.stdout.decode()
 
-        self.__device_size: DataSize = DataSize(int(cmd.stdout.decode().strip()))
+        self.__device_size: DataSize = DataSize(
+            int(cmd.stdout.decode().strip()))
 
         self.__partitions = list()
         first_partition = partitions.pop(0)
@@ -112,7 +116,9 @@ class Partition_Controller:
     def add_partition(self, size: int, unit: int = BYTE) -> None:
         if (self.__partitions[-1]["end"] + size) > self.__device_size.b:
             raise ValueError(
-                f"Partition spans from {self.__partitions[-1]['end']} <-> {self.__partitions[-1]['end'] + size} but device size is {self.__device_size.mb}"
+                "Partition spans from "
+                + f"{rount(self.__partitions[-1]['end'] / MB,0)} -> {round((self.__partitions[-1]['end'] + size) / MB,0)}MiB"
+                + f" but device size is {self.__device_size.mb}"
             )
 
         self.__partitions.append(
@@ -132,7 +138,8 @@ class Partition_Controller:
         while True:
             try:
                 part: dict = self.__partitions.pop(0)
-                partitions.append(["mkpart", "none", part["start"], part["end"]])
+                partitions.append(
+                    ["mkpart", "none", part["start"], part["end"]])
             except IndexError:
                 break
 
