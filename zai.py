@@ -48,7 +48,14 @@ class Zaiju_Arch_Installer:
     ) -> None:
         self.__config: dict[str, Any] = dict()
         if zai_home is not None:
+<<<<<<< Updated upstream
             self.__config["zai_home"] = Path(str(zai_home).strip(STRIP_PATH))
+=======
+            if isinstance(zai_home, Path):
+                self._zai_home = zai_home
+                return
+            raise TypeError(f"Expected type 'Path', got type '{type(zai_home)}'")
+>>>>>>> Stashed changes
         elif "ZAI_HOME" in os.environ:
             self.__config["zai_home"] = Path(
                 str(os.environ["ZAI_HOME"]).strip(STRIP_PATH)
@@ -61,6 +68,7 @@ class Zaiju_Arch_Installer:
         else:
             self.__config["debug"] = debug
 
+<<<<<<< Updated upstream
         if stage is not None:
             self.__stage: int = int(stage)
         elif "ZAI_STAGE" in os.environ:
@@ -100,6 +108,19 @@ if __name__ == "__main__":
         description="Installs Arch Linux",
         epilog="Created by Zaiju",
     )
+=======
+    def main(self, args):
+        zai_1.main()
+        zai_2.main()
+        zai_3.main()
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+
+    # Required positional argument
+    # parser.add_argument("arg", help="Required positional argument")
+>>>>>>> Stashed changes
 
     # Optional argument flag which defaults to False
     parser.add_argument("--debug", action="store_true", dest="debug", default=False)
@@ -138,5 +159,9 @@ if __name__ == "__main__":
         config_file=arguments["config"],
     )
 
+<<<<<<< Updated upstream
     zai.start()
+=======
+    main(args)
+>>>>>>> Stashed changes
     sys.exit()
