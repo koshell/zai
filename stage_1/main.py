@@ -9,171 +9,169 @@ __license__ = "GPL3"
 
 import argparse
 import logging
-import os
-from os import curdir
+import sys
+from logging import Logger
 from pathlib import Path
 from shutil import copyfile as cp
 from subprocess import run
+from typing import Any, Optional
 
 import rich
+from rich.console import Console as RichConsole
 
-from .. import common
-from ..common.pacman import Pacman
-from . import crypt, crypttab, format_block, mount
-from .partition import GB, Partition_Controller
+from . import crypt, crypttab, format_block, mount  # noqa: E402
+from .partition import GB, BYTE, KB, MB, TB,BYTE_STR,KB_STR,MB_STR,GB_STR,TB_STR, Partition_Controller
+
+sys.path.insert(-1, str(Path(__file__).resolve().parent.parent))
+from ..common.pacman import Pacman  # noqa: E402
 
 
-def main(*args, **kwargs):
-    """Main entry point of the app"""
-    # logger.info("hello world")
-    # logger.info(args)
+class Stage_One:
+    def __init__(
+        self,
+        config: dict[str, Any],
+        *,
+        console: Optional[RichConsole] = None,
+        logger: Optional[Logger] = None
+    ) -> None:
+        self.__config = config
+        self.__console = console
+        self.__logger = logger
 
-    config: dict = kwargs["config"]
+    def main(self):
 
-    # Get pacman to automatically retrieve gpg keys
-    Pacman.gpg_tweaks()
+        if self.__config['stage_1']['gpg_tweaks']:
+            # Get pacman to automatically retrieve gpg keys
+            Pacman.gpg_tweaks()
 
-    # Installing really useful packages that save us a lot of pain
-    Pacman.install("bat", "fish", "rsync")
+        # Installing really useful packages that save us a lot of pain
+        Pacman.install("bat", "fish", "rsync")
 
-    # Set time and date
-    # TODO
+        # Set time and date
+        # TODO
+        
+        
+        unit_int: int
 
-    # Partitioning
-    partition_table = Partition_Controller(
-        device=config["partitioning"]["block_device"],
-        partitions=[1, 32, 64],
-        unit=GB,
-    )
+        
 
-    if (
-        config["partitioning"]["end_percentage"] is not None
-        and config["partitioning"]["end_percentage"] > 0
-    ):
-        partition_table.write_to_disk(
-            end_percentage=config["partitioning"]["end_percentage"]
+        match self.__config['stage_1']['partitioning']["unit"] :
+            case [u] if u in BYTE_STR:
+                unit_int = BYTE
+            case [u] if u in KB_STR:
+                unit_int = KB
+            case [u] if u in GB_STR:
+                unit_int = GB
+            case [u] if u in MB_STR:
+                unit_int = MB
+            case [u] if u in TB_STR:
+                unit_int = TB
+            case _:
+                raise ValueError("Not supported unit type")
+
+
+        # Partitioning
+        partition_table = Partition_Controller(
+            device=self.__config['stage_1']["partitioning"]["block_device"],
+            partitions=[1, 32, 64],
+            unit=GB,
         )
-    else:
-        partition_table.write_to_disk()
 
-    partitions_to_encrypt = config["partitioning"]["partitions_to_encrypt"]
+        if (
+            config["partitioning"]["end_percentage"] is not None
+            and config["partitioning"]["end_percentage"] > 0
+        ):
+            partition_table.write_to_disk(
+                end_percentage=config["partitioning"]["end_percentage"]
+            )
+        else:
+            partition_table.write_to_disk()
 
-    # partitions_to_encrypt = [
-    #     Path("/", "dev", "nvme0n1" + "2"),
-    #     Path("/", "dev", "nvme0n1" + "3"),
-    #     Path("/", "dev", "nvme0n1" + "4"),
-    # ]
+        partitions_to_encrypt = config["partitioning"]["partitions_to_encrypt"]
 
-    # Encrypt partitions
-    crypt.main(partitions_to_encrypt, root_partition=Path(
-        "/", "dev", "nvme0n1" + "3"))
+        # partitions_to_encrypt = [
+        #     Path("/", "dev", "nvme0n1" + "2"),
+        #     Path("/", "dev", "nvme0n1" + "3"),
+        #     Path("/", "dev", "nvme0n1" + "4"),
+        # ]
 
-    format_block.main()
+        # Encrypt partitions
+        crypt.main(
+            partitions_to_encrypt, root_partition=Path("/", "dev", "nvme0n1" + "3")
+        )
 
-    mount.main()
+        format_block.main()
 
-    pacman.pre_install()
+        mount.main()
 
-    pacman.pacstrap()
+        pacman.pre_install()
 
-    # Generate and copy a 'fstab' into the new root
-    # This can sometimes mess up but it is a good example
-    # The user is expected to double check it before rebooting
-    # txt_major "Copying basic 'fstab' config into new root partition..."
-    genfstab = run(
-        [
-            "genfstab",
-            "-U",
-            "/mnt",
-        ],
-        capture_output=True,
-    )
+        pacman.pacstrap()
 
-    # Having a functioning tmpfs inside the new root will make compilation
-    # faster if we are doing that and otherwise has no real drawbacks
-    #
-    # It is intentionally created after the fstab to avoid it trying to
-    # add it to the generated 'fstab' file, instead we will let systemd
-    # handle automatic creation of the '/tmp' tmpfs after rebooting
-    # txt_major "Mounting a 'tmpfs' on '/mnt/tmp'..."
-    run(
-        [
-            "mount",
-            "-v",
-            "--mkdir",
-            *["-t", "tmpfs"],
-            *["-o", "size=100%"],
-            "tmpfs",
-            "/mnt/tmp",
-        ]
-    )
+        # Generate and copy a 'fstab' into the new root
+        # This can sometimes mess up but it is a good example
+        # The user is expected to double check it before rebooting
+        # txt_major "Copying basic 'fstab' config into new root partition..."
+        genfstab = run(
+            [
+                "genfstab",
+                "-U",
+                "/mnt",
+            ],
+            capture_output=True,
+        )
 
-    # txt_base "Successfully mounted a tmpfs on '/mnt/tmp'"
-    # echo '' | tee -a "$(_log)"
-    # # Increases the spacing between columns for nicer reading
-    # _added_spaces=4
-    # _spaces=''
-    # # shellcheck disable=SC2034
-    # for i in $(seq 1 $(( 1 + _added_spaces ))); do
-    # 	_spaces+=' '
-    # done
-    # findmnt --mountpoint /mnt/tmp \
-    # 	-o TARGET,FSTYPE,SIZE,OPTIONS | \
-    # 	sed -E "s|([[:graph:]]) |\1${_spaces}|g" | \
-    # 	tee -a "$(_log)" 2>> "$(_err)"
-    # echo '' | tee -a "$(_log)"
+        # Having a functioning tmpfs inside the new root will make compilation
+        # faster if we are doing that and otherwise has no real drawbacks
+        #
+        # It is intentionally created after the fstab to avoid it trying to
+        # add it to the generated 'fstab' file, instead we will let systemd
+        # handle automatic creation of the '/tmp' tmpfs after rebooting
+        # txt_major "Mounting a 'tmpfs' on '/mnt/tmp'..."
+        run(
+            [
+                "mount",
+                "-v",
+                "--mkdir",
+                *["-t", "tmpfs"],
+                *["-o", "size=100%"],
+                "tmpfs",
+                "/mnt/tmp",
+            ]
+        )
 
-    # Adds some very minor tweaks to sudoers
-    # These are mostly objective (changing the sudo group from 'wheel' -> 'sudo')
-    # But does include a fix for using the profile-sync-daemon in overlay mode
-    crypttab.main()
+        # txt_base "Successfully mounted a tmpfs on '/mnt/tmp'"
+        # echo '' | tee -a "$(_log)"
+        # # Increases the spacing between columns for nicer reading
+        # _added_spaces=4
+        # _spaces=''
+        # # shellcheck disable=SC2034
+        # for i in $(seq 1 $(( 1 + _added_spaces ))); do
+        # 	_spaces+=' '
+        # done
+        # findmnt --mountpoint /mnt/tmp \
+        # 	-o TARGET,FSTYPE,SIZE,OPTIONS | \
+        # 	sed -E "s|([[:graph:]]) |\1${_spaces}|g" | \
+        # 	tee -a "$(_log)" 2>> "$(_err)"
+        # echo '' | tee -a "$(_log)"
 
-    # Now we mount the local repo, if enabled, into the new root partition
-    run(
-        [
-            "mount",
-            *["-v", "--mkdir", "--bind"],
-            *["/repo", "/mnt/repo"],
-        ]
-    )
+        # Adds some very minor tweaks to sudoers
+        # These are mostly objective (changing the sudo group from 'wheel' -> 'sudo')
+        # But does include a fix for using the profile-sync-daemon in overlay mode
+        crypttab.main()
 
-    # Keep our 'pacman.conf' changes so we don't need to do them again
-    # txt_minor "Moving modified livecd 'pacman.conf' into chroot..."
-    cp("/etc/pacman.conf", "/mnt/etc/pacman.conf")
+        # Now we mount the local repo, if enabled, into the new root partition
+        run(
+            [
+                "mount",
+                *["-v", "--mkdir", "--bind"],
+                *["/repo", "/mnt/repo"],
+            ]
+        )
 
-
-if __name__ == "__main__":
-    """This is executed when run from the command line"""
-    parser = argparse.ArgumentParser()
-
-    # Required positional argument
-    # parser.add_argument("arg", help="Required positional argument")
-
-    # Optional argument flag which defaults to False
-    parser.add_argument("-f", "--flag", action="store_true", default=False)
-
-    # Optional argument which requires a parameter (eg. -d test)
-    parser.add_argument("-n", "--name", action="store", dest="name")
-
-    # Optional verbosity counter (eg. -v, -vv, -vvv, etc.)
-    parser.add_argument(
-        "-v", "--verbose",
-        action="count",
-        default=0,
-        help="Verbosity (-v, -vv, etc)",
-    )
-
-    # Specify output of "--version"
-    parser.add_argument(
-        "-V", "--version",
-        action="version",
-        version="%(prog)s (version {version})".format(version=__version__),
-    )
-
-    args = parser.parse_args()
-
-    main(args)
-    exit()
+        # Keep our 'pacman.conf' changes so we don't need to do them again
+        # txt_minor "Moving modified livecd 'pacman.conf' into chroot..."
+        cp("/etc/pacman.conf", "/mnt/etc/pacman.conf")
 
 
 """""

@@ -21,6 +21,13 @@ MB = 1024 * KB
 GB = 1024 * MB
 TB = 1024 * GB
 
+BYTE_STR = ['b','byte']
+KB_STR = ['kb','kib']
+MB_STR = ['mb','mib']
+GB_STR = ['gb','gib']
+TB_STR = ['tb','tib']
+
+
 GPT = "gpt"
 MBR = "msdos"
 

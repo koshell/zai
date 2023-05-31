@@ -1,5 +1,9 @@
 {
     "python.autoComplete.extraPaths": [
+        "${workspaceFolder}/zai_python",
         "${workspaceFolder}/.venv/lib/python3.11"
+    ],
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}/zai_python"
     ]
 }

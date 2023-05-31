@@ -10,7 +10,12 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "justMyCode": true
+            "justMyCode": true,
+            "args": [
+                "-v",
+                "--zai-home",
+                "/test/test"
+            ]
         },
         {
             "name": "Python: Run Installer",
