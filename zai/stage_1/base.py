@@ -7,8 +7,6 @@ __author__ = "Zaiju"
 __version__ = "0.1.0"
 __license__ = "GPL3"
 
-import argparse
-import logging
 import sys
 from logging import Logger
 from pathlib import Path
@@ -16,14 +14,20 @@ from shutil import copyfile as cp
 from subprocess import run
 from typing import Any, Optional
 
-import rich
 from rich.console import Console as RichConsole
 
-from . import crypt, crypttab, format_block, mount  # noqa: E402
-from .partition import GB, BYTE, KB, MB, TB,BYTE_STR,KB_STR,MB_STR,GB_STR,TB_STR, Partition_Controller
+from . import crypt, crypttab, format_block, mount
+from .partition import (
+    BYTE_STR,
+    GB,
+    GB_STR,
+    KB_STR,
+    MB_STR,
+    TB_STR,
+    Partition_Controller,
+)
 
-sys.path.insert(-1, str(Path(__file__).resolve().parent.parent))
-from ..common.pacman import Pacman  # noqa: E402
+from ..common.pacman import Pacman  
 
 
 class Stage_One:
@@ -32,15 +36,14 @@ class Stage_One:
         config: dict[str, Any],
         *,
         console: Optional[RichConsole] = None,
-        logger: Optional[Logger] = None
+        logger: Optional[Logger] = None,
     ) -> None:
         self.__config = config
         self.__console = console
         self.__logger = logger
 
     def main(self):
-
-        if self.__config['stage_1']['gpg_tweaks']:
+        if self.__config["stage_1"]["gpg_tweaks"]:
             # Get pacman to automatically retrieve gpg keys
             Pacman.gpg_tweaks()
 
@@ -49,45 +52,41 @@ class Stage_One:
 
         # Set time and date
         # TODO
-        
-        
+
         unit_int: int
 
-        
-
-        match self.__config['stage_1']['partitioning']["unit"] :
+        match self.__config["stage_1"]["partitioning"]["unit"]:
             case [u] if u in BYTE_STR:
-                unit_int = BYTE
+                pass
             case [u] if u in KB_STR:
-                unit_int = KB
+                pass
             case [u] if u in GB_STR:
-                unit_int = GB
+                pass
             case [u] if u in MB_STR:
-                unit_int = MB
+                pass
             case [u] if u in TB_STR:
-                unit_int = TB
+                pass
             case _:
                 raise ValueError("Not supported unit type")
 
-
         # Partitioning
         partition_table = Partition_Controller(
-            device=self.__config['stage_1']["partitioning"]["block_device"],
+            device=self.__config["stage_1"]["partitioning"]["block_device"],
             partitions=[1, 32, 64],
             unit=GB,
         )
 
         if (
-            config["partitioning"]["end_percentage"] is not None
-            and config["partitioning"]["end_percentage"] > 0
+            "end_percentage" in self.__config["partitioning"]
+            and self.__config["partitioning"]["end_percentage"] > 0
         ):
             partition_table.write_to_disk(
-                end_percentage=config["partitioning"]["end_percentage"]
+                end_percentage=self.__config["partitioning"]["end_percentage"]
             )
         else:
             partition_table.write_to_disk()
 
-        partitions_to_encrypt = config["partitioning"]["partitions_to_encrypt"]
+        partitions_to_encrypt = self.__config["partitioning"]["partitions_to_encrypt"]
 
         # partitions_to_encrypt = [
         #     Path("/", "dev", "nvme0n1" + "2"),
@@ -112,7 +111,7 @@ class Stage_One:
         # This can sometimes mess up but it is a good example
         # The user is expected to double check it before rebooting
         # txt_major "Copying basic 'fstab' config into new root partition..."
-        genfstab = run(
+        run(
             [
                 "genfstab",
                 "-U",

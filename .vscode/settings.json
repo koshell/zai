@@ -5,5 +5,12 @@
     ],
     "python.analysis.extraPaths": [
         "${workspaceFolder}/zai_python"
-    ]
+    ],
+    "cSpell.language": "en-AU,en-GB,en",
+    "python.linting.enabled": false,
+    "editor.formatOnSave": false,
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": false,
+        "source.fixAll": true
+    }
 }

@@ -11,9 +11,9 @@ import subprocess
 from itertools import chain
 from pathlib import Path
 from subprocess import run
-from typing import Dict, List, Optional
+from typing import List, Optional
 
-from ..common.types import StrPath
+from common.types import StrPath
 
 BYTE = 1
 KB = 1024 * BYTE
@@ -21,11 +21,11 @@ MB = 1024 * KB
 GB = 1024 * MB
 TB = 1024 * GB
 
-BYTE_STR = ['b','byte']
-KB_STR = ['kb','kib']
-MB_STR = ['mb','mib']
-GB_STR = ['gb','gib']
-TB_STR = ['tb','tib']
+BYTE_STR = ["b", "byte"]
+KB_STR = ["kb", "kib"]
+MB_STR = ["mb", "mib"]
+GB_STR = ["gb", "gib"]
+TB_STR = ["tb", "tib"]
 
 
 GPT = "gpt"
@@ -47,8 +47,7 @@ class DataSize:
                 if size_mebibytes is None:
                     if size_gibibytes is None:
                         if size_tebibytes is None:
-                            raise ValueError(
-                                "No size passed to DataSize class")
+                            raise ValueError("No size passed to DataSize class")
                         else:
                             self.__size: int = int(size_tebibytes * TB)
                     else:
@@ -92,8 +91,7 @@ class Partition_Controller:
         unit: int = BYTE,
     ) -> None:
         if partition_table not in [GPT, MBR]:
-            raise ValueError(
-                f"Expected '{GPT}' or '{MBR}' but got '{partition_table}'")
+            raise ValueError(f"Expected '{GPT}' or '{MBR}' but got '{partition_table}'")
         self.partition_table: str = partition_table
 
         if not Path(device).exists():
@@ -101,12 +99,10 @@ class Partition_Controller:
 
         self.__device: str = str(Path(device).absolute())
 
-        cmd = run(["blockdev", "--getsize64", self.__device],
-                  capture_output=True)
+        cmd = run(["blockdev", "--getsize64", self.__device], capture_output=True)
         cmd.stdout.decode()
 
-        self.__device_size: DataSize = DataSize(
-            int(cmd.stdout.decode().strip()))
+        self.__device_size: DataSize = DataSize(int(cmd.stdout.decode().strip()))
 
         self.__partitions = list()
         first_partition = partitions.pop(0)
@@ -145,8 +141,7 @@ class Partition_Controller:
         while True:
             try:
                 part: dict = self.__partitions.pop(0)
-                partitions.append(
-                    ["mkpart", "none", part["start"], part["end"]])
+                partitions.append(["mkpart", "none", part["start"], part["end"]])
             except IndexError:
                 break
 
