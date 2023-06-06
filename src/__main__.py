@@ -7,16 +7,13 @@ from __future__ import annotations
 __author__ = "Zaiju"
 __version__ = "0.1.0"
 __license__ = "GPL3"
-__package__ = "."
 
 import argparse
 import sys
-from typing import Any
 from pathlib import Path
-
+from typing import Any
 
 from .base import Zaiju_Arch_Installer
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -61,9 +58,11 @@ if __name__ == "__main__":
     parser.add_argument(
         "--version",
         action="version",
-        version="%(prog)s (version {version})".format(version=__version__),
+        version="%(prog)s (version {version})".format(
+            version=__version__
+        ),  # ruff really doesn't like this line
     )
-    arguments: dict[str, Any] = dict()
+    arguments: dict[str, Any] = {}
     for arg in parser.parse_args()._get_kwargs():
         try:
             arguments[arg[0]] = arg[1][0]
