@@ -135,21 +135,11 @@ class Partition_Controller:
         scheme: Partition_Table = Partition_Table.GPT,
         unit: DATA_UNIT = IEC.Byte,
     ) -> None:
-        if not isinstance(scheme, Partition_Table):
-            raise ValueError(f"Expected '{Partition_Table}' but got '{scheme}'")
         self.partition_scheme: Partition_Table = scheme
 
-        self.__device_size: Size_Bytes = Size_Bytes(int(cmd.stdout.decode().strip()))
-
-        self.__partitions = list()
-        first_partition = Size_Bytes.pop(0)
-        # Offset the first partition by 1 MiB
         self.__partitions.append(
             {"start": "0%", "end": f"{( first_partition * unit ) + MB}B"}
         )
-
-        for partition in partitions:
-            self.add_partition(partition)
 
         return
 
